@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.9
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: [ check, --select, I, --fix  ]
+      # Run the formatter.
+      - id: ruff-format
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        exclude: "[a-zA-Z]*/(migrations|tests|settings)/(.)*"
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.14.1'
+    hooks:
+      - id: mypy
+        args: [--strict, --ignore-missing-imports, --disable-error-code=misc]
+        exclude: "[a-zA-Z]*/(migrations|tests|settings)/(.)*"
+        additional_dependencies: [
+          django,
+          djangorestframework,
+          drf-spectacular,
+          drf_spectacular_sidecar,
+          gunicorn,
+          requests,
+        ]

@@ -1,0 +1,38 @@
+version: '3'
+
+env:
+  COMPOSE: docker compose
+
+tasks:
+  compose-*:
+    desc: "Run a docker compose command like: task compose-up -- -d"
+    vars:
+      COMMAND: '{{index .MATCH 0}}'
+    cmds:
+      - $COMPOSE {{.COMMAND}} {{.CLI_ARGS}}
+
+  manage-startapp:
+    desc: "Creates a new app <app_name> at apps/<app_name>"
+    cmds:
+      - $COMPOSE exec -w /code backend-humanify mkdir apps/{{.CLI_ARGS}}
+      - $COMPOSE exec -w /code backend-humanify uv run python manage.py startapp {{.CLI_ARGS}} apps/{{.CLI_ARGS}}
+
+  manage-*:
+    desc: "Run a manage.py command like: task manage-migrate -- <app>"
+    vars:
+      COMMAND: '{{index .MATCH 0}}'
+    cmds:
+      - $COMPOSE exec -w /code backend-humanify uv run python manage.py {{.COMMAND}} {{.CLI_ARGS}}
+
+  uv-*:
+    desc: "[CONTAINER_ONLY] Run a uv command like: task uv-add -- <package>"
+    vars:
+      COMMAND: '{{index .MATCH 0}}'
+    cmds:
+      - $COMPOSE exec -w /code backend-humanify uv {{.COMMAND}} {{.CLI_ARGS}}
+
+  test:
+    desc: "Run tests (all by default)"
+    cmds:
+      - $COMPOSE exec -w /code backend-humanify uv run coverage run -m pytest {{.CLI_ARGS}} --no-migrations -p no:logging --ds=humanify_project.settings.test
+      - $COMPOSE exec -w /code backend-humanify uv run coverage report -m --omit="*/tests/*,humanify_project/*" --skip-covered --skip-empty
