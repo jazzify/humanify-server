@@ -28,6 +28,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS").strip().split(",
 LOCAL_APPS = [
     "apps.api",
     "apps.common",
+    "apps.users",
 ]
 
 THIRD_PARTY_APPS = [
@@ -187,7 +188,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
 
@@ -198,6 +199,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"
+
+# Custom User Model
+AUTH_USER_MODEL = "users.BaseUser"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
