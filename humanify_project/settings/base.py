@@ -209,3 +209,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 from humanify_project.extra_settings.rest_framework import *  # noqa
 from humanify_project.extra_settings.drf_spectacular import *  # noqa
+from humanify_project.extra_settings.drf_simplejwt import *  # noqa
