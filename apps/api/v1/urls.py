@@ -16,4 +16,5 @@ urlpatterns = [
     path("auth/me/", AuthMeAPIView.as_view(), name="auth_me"),
     path("docs/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("places/", include("apps.places.urls")),
 ]
