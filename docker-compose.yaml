@@ -1,13 +1,20 @@
+version: '3.8'
+
 services:
   postgres-humanify:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
     ports:
-      - 5432:5432
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend-humanify:
     build:
@@ -24,15 +31,19 @@ services:
     volumes:
       - /code/.venv
       - ./:/code
+      - static_volume:/code/staticfiles
+      - media_volume:/code/media
     environment:
       - DJANGO_SETTINGS_MODULE=humanify_project.settings.local
     env_file:
       - .env
     ports:
-      - 8000:8000
+      - "8000:8000"
     depends_on:
-      - postgres-humanify
-
+      postgres-humanify:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:
