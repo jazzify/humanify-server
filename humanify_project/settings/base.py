@@ -29,6 +29,7 @@ LOCAL_APPS = [
     "apps.api",
     "apps.common",
     "apps.users",
+    "apps.places",
 ]
 
 THIRD_PARTY_APPS = [
@@ -67,8 +68,11 @@ MIDDLEWARE = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#storages
 # https://whitenoise.readthedocs.io/en/latest/django.html#add-compression-and-caching-support
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
