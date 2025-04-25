@@ -24,7 +24,7 @@ repos:
     rev: 'v1.14.1'
     hooks:
       - id: mypy
-        args: [--strict, --ignore-missing-imports, --disable-error-code=misc]
+        args: [--strict, --disable-error-code=misc]
         exclude: "[a-zA-Z]*/(migrations|tests|settings)/(.)*"
         additional_dependencies: [
           django,
