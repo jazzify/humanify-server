@@ -1,5 +1,6 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +10,8 @@ from apps.places.services import create_place, get_all_places_by_user
 
 
 class CreateListPlaceAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     @extend_schema(
         summary="Create Place",
         request=PlaceCreateSerializer,
