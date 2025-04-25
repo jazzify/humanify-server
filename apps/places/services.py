@@ -33,7 +33,7 @@ def create_place(
             code="max_images",
         )
 
-    place = Place.objects.create(
+    place: Place = Place.objects.create(
         user=user,
         name=name,
         city=city,
@@ -54,4 +54,4 @@ def create_place(
             [PlaceImage(place=place, image=image) for image in images]
         )
 
-    return place  # type: ignore[no-any-return]
+    return place
