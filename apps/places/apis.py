@@ -24,7 +24,7 @@ class CreateListPlaceAPIView(APIView):
                 city=serializer.validated_data["city"],
                 latitude=serializer.validated_data["latitude"],
                 longitude=serializer.validated_data["longitude"],
-                tags=serializer.validated_data["tags"],
+                tag_names=serializer.validated_data["tags"],
                 images=serializer.validated_data["images"],
                 favorite=serializer.validated_data["favorite"],
             )
