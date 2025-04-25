@@ -13,7 +13,7 @@ class CreateListPlaceAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="Create Place",
+        summary="Create place",
         request=PlaceCreateSerializer,
         responses={status.HTTP_201_CREATED: PlaceSerializer},
     )
@@ -37,7 +37,7 @@ class CreateListPlaceAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
-        summary="List Places",
+        summary="List places",
         responses={status.HTTP_200_OK: PlaceSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:
