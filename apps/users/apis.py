@@ -13,7 +13,7 @@ class AuthMeAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="Auth Me",
+        summary="Auth me",
         responses={status.HTTP_200_OK: BaseUserSerializer},
     )
     def get(self, request: Request) -> Response:
@@ -26,6 +26,10 @@ class UserCreateApi(APIView):
         email = serializers.EmailField()
         password = serializers.CharField()
 
+    @extend_schema(
+        summary="Create user",
+        responses={status.HTTP_201_CREATED: None},
+    )
     def post(self, request: Request) -> Response:
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
