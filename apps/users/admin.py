@@ -10,8 +10,6 @@ class BaseUserAdmin(admin.ModelAdmin):
         "is_admin",
         "is_superuser",
         "is_active",
-        "created_at",
-        "updated_at",
     )
     search_fields = ("email",)
     list_filter = ("is_active", "is_admin", "is_superuser")
@@ -19,7 +17,4 @@ class BaseUserAdmin(admin.ModelAdmin):
     readonly_fields = (
         "last_login",
         "is_superuser",
-        "date_joined",
-        "created_at",
-        "updated_at",
     )
