@@ -1,5 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 
+from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
 from apps.users.models import BaseUser
 
@@ -25,6 +27,12 @@ def create_place(
     favorite: bool | None = False,
     description: str | None = None,
 ) -> Place:
+    if images and len(images) > PLACE_IMAGES_LIMIT:
+        raise ValidationError(
+            f"Maximum number of images is {PLACE_IMAGES_LIMIT}",
+            code="max_images",
+        )
+
     place = Place.objects.create(
         user=user,
         name=name,
@@ -46,4 +54,4 @@ def create_place(
             [PlaceImage(place=place, image=image) for image in images]
         )
 
-    return place
+    return place  # type: ignore[no-any-return]

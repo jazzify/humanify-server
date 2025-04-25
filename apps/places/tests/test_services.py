@@ -1,6 +1,8 @@
 import pytest
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
+from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.services import create_place, get_all_places_by_user
 from apps.places.tests.factories import PlaceFactory, PlaceImageFactory, PlaceTagFactory
 
@@ -178,3 +180,27 @@ def test_create_place_with_all_fields(user):
     assert place.description == "Test description"
     assert place.tags.count() == 2
     assert place.images.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_place_raises_validation_error_on_too_many_images(user):
+    """Test that ValidationError is raised when too many images are provided."""
+    # Create more images than the limit
+    images = [
+        SimpleUploadedFile(
+            name=f"test_image_{i}.jpg",
+            content=b"dummy_content",
+            content_type="image/jpeg",
+        )
+        for i in range(PLACE_IMAGES_LIMIT + 1)
+    ]
+
+    with pytest.raises(ValidationError):
+        create_place(
+            user=user,
+            name="Test Place",
+            city="Test City",
+            latitude=40.7128,
+            longitude=-74.0060,
+            images=images,
+        )

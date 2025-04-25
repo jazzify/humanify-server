@@ -1,6 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from apps.common.models import BaseModel
+from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.users.models import BaseUser
 
 
@@ -42,6 +44,13 @@ class Place(BaseModel):
 class PlaceImage(BaseModel):
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="place_images/")
+
+    def save(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        if self.place.images.count() >= PLACE_IMAGES_LIMIT:
+            raise ValidationError(
+                f"A place cannot have more than {PLACE_IMAGES_LIMIT} images."
+            )
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-updated_at"]
