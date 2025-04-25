@@ -1,3 +1,7 @@
+import factory
+from factory.django import DjangoModelFactory
+
+from apps.common.tests import faker
 from apps.users.models import BaseUser
 
 
@@ -7,9 +11,9 @@ class BaseUserFactory(DjangoModelFactory):
         skip_postgeneration_save = True
 
     username = factory.Sequence(lambda n: f"user{n}")  # Unique username
-    email = factory.LazyFunction(lambda: fake.email())
-    first_name = factory.LazyFunction(lambda: fake.first_name())
-    last_name = factory.LazyFunction(lambda: fake.last_name())
+    email = factory.LazyFunction(lambda: faker.email())
+    first_name = factory.LazyFunction(lambda: faker.first_name())
+    last_name = factory.LazyFunction(lambda: faker.last_name())
     is_active = True
     is_admin = False
 
