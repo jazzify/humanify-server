@@ -7,6 +7,7 @@ from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework.serializers import as_serializer_error
 from rest_framework.views import exception_handler
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 from apps.api.exceptions import ApplicationError
 
@@ -35,6 +36,11 @@ def custom_exception_handler(exc: Exception, ctx: dict[str, Any]) -> Response | 
             data = {"message": exc.message, "extra": exc.extra}
             return Response(data, status=exc.status)
         return response
+
+    if isinstance(exc, InvalidToken):
+        detail = exc.detail.pop("detail")
+        data = {"message": detail, "extra": exc.detail}
+        return Response(data, status=exc.status_code)
 
     if isinstance(exc.detail, (list, dict)):  # type: ignore
         response.data = {"detail": response.data}
