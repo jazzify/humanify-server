@@ -35,4 +35,4 @@ tasks:
     desc: "Run tests (all by default)"
     cmds:
       - $COMPOSE exec -w /code backend-humanify uv run coverage run -m pytest {{.CLI_ARGS}} --no-migrations -p no:logging --ds=humanify_project.settings.test
-      - $COMPOSE exec -w /code backend-humanify uv run coverage report -m --omit="*/tests/*,humanify_project/*,apps/*/models.py,apps/conftest.py" --skip-covered --skip-empty
+      - $COMPOSE exec -w /code backend-humanify uv run coverage report -m --omit="*/tests/*,humanify_project/*,apps/*/models.py,apps/conftest.py" --skip-empty
