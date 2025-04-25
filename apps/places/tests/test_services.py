@@ -1,7 +1,6 @@
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from apps.places.models import Place, PlaceImage, PlaceTag
 from apps.places.services import create_place, get_all_places_by_user
 from apps.places.tests.factories import PlaceFactory, PlaceImageFactory, PlaceTagFactory
 
@@ -17,10 +16,10 @@ def test_get_all_places_by_user_empty(user):
 def test_get_all_places_by_user_with_places(user, other_user):
     """Test getting places when user has places"""
     # Create 3 places for the user
-    places = [PlaceFactory(user=user) for _ in range(3)]
+    [PlaceFactory(user=user) for _ in range(3)]
 
     # Create 2 places for another user (should not be returned)
-    other_places = [PlaceFactory(user=other_user) for _ in range(2)]
+    [PlaceFactory(user=other_user) for _ in range(2)]
 
     # Get places for the user
     user_places = get_all_places_by_user(user)
@@ -42,7 +41,7 @@ def test_get_all_places_by_user_with_related_data(user):
     place.tags.add(*tags)
 
     # Add images
-    images = [PlaceImageFactory(place=place) for _ in range(2)]
+    [PlaceImageFactory(place=place) for _ in range(2)]
 
     # Get places
     places = get_all_places_by_user(user)
@@ -50,7 +49,7 @@ def test_get_all_places_by_user_with_related_data(user):
     # Check that related data is prefetched
     assert len(places) == 1
     assert places[0].tags.count() == 2
-    assert places[0].place_images.count() == 2
+    assert places[0].images.count() == 2
 
 
 @pytest.mark.django_db
@@ -73,7 +72,7 @@ def test_create_place_basic(user):
     assert place.favorite is False
     assert place.description is None
     assert place.tags.count() == 0
-    assert place.place_images.count() == 0
+    assert place.images.count() == 0
 
 
 @pytest.mark.django_db
@@ -144,7 +143,7 @@ def test_create_place_with_images(user):
     )
 
     # Check that images were created and associated with the place
-    assert place.place_images.count() == 2
+    assert place.images.count() == 2
 
 
 @pytest.mark.django_db
@@ -178,4 +177,4 @@ def test_create_place_with_all_fields(user):
     assert place.favorite is True
     assert place.description == "Test description"
     assert place.tags.count() == 2
-    assert place.place_images.count() == 1
+    assert place.images.count() == 1
