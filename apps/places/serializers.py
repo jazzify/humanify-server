@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
 from apps.users.serializers import BaseUserSerializer
 
@@ -47,15 +48,18 @@ class PlaceSerializer(serializers.ModelSerializer):
 
 
 class PlaceCreateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
-    description = serializers.CharField(allow_blank=True)
-    city = serializers.CharField(max_length=255)
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField(
+        max_length=500, required=False, allow_blank=True
+    )
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
-    tags = serializers.ListField(child=serializers.CharField(max_length=255))
+    tags = serializers.ListField(child=serializers.CharField(max_length=10))
     images = serializers.ListField(
         child=serializers.ImageField(write_only=True, required=False),
         write_only=True,
         required=False,
+        max_length=PLACE_IMAGES_LIMIT,
     )
     favorite = serializers.BooleanField(required=False)
