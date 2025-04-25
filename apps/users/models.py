@@ -1,10 +1,8 @@
 from typing import Any
 
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager as DjangoBaseUserManager
 from django.db import models
-
-from apps.common.models import BaseModel
 
 
 class BaseUserManager(DjangoBaseUserManager):
@@ -30,6 +28,7 @@ class BaseUserManager(DjangoBaseUserManager):
         else:
             user.set_unusable_password()
 
+        user.full_clean()
         user.save(using=self._db)
         return user  # type: ignore[no-any-return]
 
@@ -44,10 +43,10 @@ class BaseUserManager(DjangoBaseUserManager):
         return user
 
 
-class BaseUser(BaseModel, AbstractUser, PermissionsMixin):
+class BaseUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -59,5 +58,6 @@ class BaseUser(BaseModel, AbstractUser, PermissionsMixin):
     def __str__(self) -> str | Any:
         return self.email
 
+    @property
     def is_staff(self) -> bool | Any:
         return self.is_admin
