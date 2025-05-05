@@ -3,52 +3,55 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.places.constants import PLACE_IMAGES_LIMIT
-from apps.places.services import create_place, get_all_places_by_user
+from apps.places.services import (
+    create_place,
+    create_place_images,
+    get_all_places_by_user,
+)
 from apps.places.tests.factories import PlaceFactory, PlaceImageFactory, PlaceTagFactory
 
 
 @pytest.mark.django_db
 def test_get_all_places_by_user_empty(user):
-    """Test getting places when user has no places"""
     places = get_all_places_by_user(user)
     assert len(places) == 0
 
 
 @pytest.mark.django_db
 def test_get_all_places_by_user_with_places(user, other_user):
-    """Test getting places when user has places"""
-    # Create 3 places for the user
     [PlaceFactory(user=user) for _ in range(3)]
 
     # Create 2 places for another user (should not be returned)
     [PlaceFactory(user=other_user) for _ in range(2)]
 
-    # Get places for the user
     user_places = get_all_places_by_user(user)
 
-    # Check that only the user's places are returned
     assert len(user_places) == 3
     for place in user_places:
         assert place.user == user
 
 
 @pytest.mark.django_db
-def test_get_all_places_by_user_with_related_data(user):
-    """Test that related data is prefetched"""
-    # Create a place with tags and images
+def test_get_all_places_by_user_num_queries(user, django_assert_num_queries):
     place = PlaceFactory(user=user)
-
-    # Add tags
     tags = [PlaceTagFactory(user=user) for _ in range(2)]
     place.tags.add(*tags)
-
-    # Add images
     [PlaceImageFactory(place=place) for _ in range(2)]
 
-    # Get places
+    with django_assert_num_queries(3):
+        places = get_all_places_by_user(user)
+        assert len(places) == 1
+
+
+@pytest.mark.django_db
+def test_get_all_places_by_user_with_related_data(user):
+    place = PlaceFactory(user=user)
+    tags = [PlaceTagFactory(user=user) for _ in range(2)]
+    place.tags.add(*tags)
+    [PlaceImageFactory(place=place) for _ in range(2)]
+
     places = get_all_places_by_user(user)
 
-    # Check that related data is prefetched
     assert len(places) == 1
     assert places[0].tags.count() == 2
     assert places[0].images.count() == 2
@@ -56,7 +59,6 @@ def test_get_all_places_by_user_with_related_data(user):
 
 @pytest.mark.django_db
 def test_create_place_basic(user):
-    """Test creating a place with basic information"""
     place = create_place(
         user=user,
         name="Test Place",
@@ -79,7 +81,6 @@ def test_create_place_basic(user):
 
 @pytest.mark.django_db
 def test_create_place_with_optional_fields(user):
-    """Test creating a place with optional fields"""
     place = create_place(
         user=user,
         name="Test Place",
@@ -97,7 +98,6 @@ def test_create_place_with_optional_fields(user):
 
 @pytest.mark.django_db
 def test_create_place_with_tags(user):
-    """Test creating a place with tags"""
     tag_names = ["tag1", "tag2", "tag3"]
 
     place = create_place(
@@ -121,9 +121,9 @@ def test_create_place_with_tags(user):
 
 
 @pytest.mark.django_db
-def test_create_place_with_images(user):
-    """Test creating a place with images"""
-    # Create test image files
+def test_create_place_images(user):
+    place = PlaceFactory(user=user)
+
     image1 = SimpleUploadedFile(
         name="test_image1.jpg",
         content=b"GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
@@ -135,72 +135,47 @@ def test_create_place_with_images(user):
         content_type="image/jpeg",
     )
 
-    place = create_place(
-        user=user,
-        name="Test Place",
-        city="Test City",
-        latitude=40.7128,
-        longitude=-74.0060,
+    create_place_images(
+        place_id=place.id,
         images=[image1, image2],
     )
 
-    # Check that images were created and associated with the place
     assert place.images.count() == 2
 
 
 @pytest.mark.django_db
-def test_create_place_with_all_fields(user):
-    """Test creating a place with all fields"""
-    tag_names = ["tag1", "tag2"]
-    image = SimpleUploadedFile(
-        name="test_image.jpg",
-        content=b"GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
-        content_type="image/jpeg",
-    )
-
-    place = create_place(
-        user=user,
-        name="Test Place",
-        city="Test City",
-        latitude=40.7128,
-        longitude=-74.0060,
-        tag_names=tag_names,
-        images=[image],
-        favorite=True,
-        description="Test description",
-    )
-
-    # Check that place was created correctly with all fields
-    assert place.user == user
-    assert place.name == "Test Place"
-    assert place.city == "Test City"
-    assert place.latitude == 40.7128
-    assert place.longitude == -74.0060
-    assert place.favorite is True
-    assert place.description == "Test description"
-    assert place.tags.count() == 2
-    assert place.images.count() == 1
-
-
-@pytest.mark.django_db
-def test_create_place_raises_validation_error_on_too_many_images(user):
-    """Test that ValidationError is raised when too many images are provided."""
-    # Create more images than the limit
+def test_create_place_images_exceed_limit(user):
+    place = PlaceFactory(user=user)
     images = [
         SimpleUploadedFile(
             name=f"test_image_{i}.jpg",
             content=b"dummy_content",
             content_type="image/jpeg",
         )
-        for i in range(PLACE_IMAGES_LIMIT + 1)
+        for i in range(PLACE_IMAGES_LIMIT)
     ]
+    create_place_images(place_id=place.id, images=images)
+    assert place.images.count() == PLACE_IMAGES_LIMIT
+    extra_image = SimpleUploadedFile(
+        name="extra_image.jpg",
+        content=b"extra_dummy_content",
+        content_type="image/jpeg",
+    )
+    with pytest.raises(
+        ValidationError,
+        match=f"A place cannot have more than {PLACE_IMAGES_LIMIT} images.",
+    ):
+        create_place_images(place_id=place.id, images=[extra_image])
+    assert place.images.count() == PLACE_IMAGES_LIMIT
 
-    with pytest.raises(ValidationError):
-        create_place(
-            user=user,
-            name="Test Place",
-            city="Test City",
-            latitude=40.7128,
-            longitude=-74.0060,
-            images=images,
-        )
+
+@pytest.mark.django_db
+def test_create_place_images_invalid_place():
+    invalid_place_id = 999999
+    image = SimpleUploadedFile(
+        name="test_image.jpg",
+        content=b"dummy_content",
+        content_type="image/jpeg",
+    )
+    with pytest.raises(ValidationError, match="Place with id"):
+        create_place_images(place_id=invalid_place_id, images=[image])

@@ -18,7 +18,6 @@ class PlaceTagSerializer(serializers.ModelSerializer):
 
 
 class PlaceSerializer(serializers.ModelSerializer):
-    user = BaseUserSerializer(read_only=True)
     tags = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
 
@@ -41,7 +40,7 @@ class PlaceSerializer(serializers.ModelSerializer):
             "images",
             "favorite",
             "description",
-            "user",
+            "user_id",
             "created_at",
             "updated_at",
         ]
@@ -56,10 +55,13 @@ class PlaceCreateSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
     tags = serializers.ListField(child=serializers.CharField(max_length=10))
-    images = serializers.ListField(
+    favorite = serializers.BooleanField(required=False)
+
+
+class PlaceImageCreateSerializer(serializers.Serializer):
+    files = serializers.ListField(
         child=serializers.ImageField(write_only=True, required=False),
         write_only=True,
         required=False,
         max_length=PLACE_IMAGES_LIMIT,
     )
-    favorite = serializers.BooleanField(required=False)
