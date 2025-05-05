@@ -9,7 +9,7 @@ from apps.users.serializers import BaseUserSerializer
 from apps.users.services import user_create
 
 
-class AuthMeAPIView(APIView):
+class AuthMeAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -28,6 +28,7 @@ class UserCreateApi(APIView):
 
     @extend_schema(
         summary="Create user",
+        request=InputSerializer,
         responses={status.HTTP_201_CREATED: None},
     )
     def post(self, request: Request) -> Response:
