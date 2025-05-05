@@ -1,13 +1,6 @@
-import logging
-
-from django.db import transaction
-
 from apps.users.models import BaseUser
 
-logger = logging.getLogger(__name__)
 
-
-@transaction.atomic
 def user_create(
     *,
     email: str,
