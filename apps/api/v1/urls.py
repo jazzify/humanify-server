@@ -8,12 +8,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from apps.users.apis import AuthMeAPIView
+from apps.users.apis import AuthMeAPI
 
 urlpatterns = [
     path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("auth/me/", AuthMeAPIView.as_view(), name="auth_me"),
+    path("auth/me/", AuthMeAPI.as_view(), name="auth_me"),
     path("docs/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path("users/", include("apps.users.urls")),
