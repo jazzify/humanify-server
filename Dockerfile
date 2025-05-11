@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Set environment variables
 ENV UV_LINK_MODE=copy \
@@ -32,7 +32,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system -e .
 
 # Final stage
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -48,7 +48,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /code
 
 # Copy dependencies from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Expose port
