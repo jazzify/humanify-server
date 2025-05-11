@@ -3,6 +3,13 @@ from humanify_project.settings.base import *  # noqa F403
 TESTING = True
 DEBUG = True
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "local_test_db",
+    }
+}
+
 # Define a separate media root for tests
 TEST_MEDIA_ROOT = BASE_DIR / "test_media"  # noqa F405
 
