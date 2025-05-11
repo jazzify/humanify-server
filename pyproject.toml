@@ -3,7 +3,7 @@ name = "Humanify"
 version = "0.1.0"
 description = "Humanify"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "django>=5.1.6",
     "django-cors-headers>=4.7.0",
@@ -26,6 +26,7 @@ dev = [
     "pytest-django>=4.10.0",
     "django-stubs[compatible-mypy]>=5.1.3",
     "djangorestframework-stubs[compatible-mypy]>=3.15.3",
+    "pre-commit>=3.7.1",
 ]
 
 [tool.setuptools]
