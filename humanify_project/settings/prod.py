@@ -1,8 +1,9 @@
-# ruff: noqa: F403 F405
 import os
-import socket
 
 from humanify_project.settings.base import *
+
+TESTING = False
+DEBUG = False
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -16,16 +17,3 @@ DATABASES = {
         "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
-
-DEBUG = True
-INSTALLED_APPS = [
-    *INSTALLED_APPS,
-    "debug_toolbar",
-]
-MIDDLEWARE = [
-    *MIDDLEWARE,
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-]
-# tricks to have debug toolbar when developing with docker
-ip = socket.gethostbyname(socket.gethostname())
-INTERNAL_IPS = [ip[:-1] + "1"]
