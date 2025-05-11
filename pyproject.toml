@@ -28,6 +28,9 @@ dev = [
     "djangorestframework-stubs[compatible-mypy]>=3.15.3",
 ]
 
+[tool.setuptools]
+packages = ["apps", "humanify_project"]
+
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
