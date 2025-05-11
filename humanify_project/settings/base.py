@@ -30,6 +30,7 @@ LOCAL_APPS = [
     "apps.common",
     "apps.users",
     "apps.places",
+    "apps.images",
 ]
 
 THIRD_PARTY_APPS = [
