@@ -50,8 +50,7 @@ def create_place(
     return place
 
 
-def create_place_images(place_id: Place, images: list[ImageFile]) -> list[PlaceImage]:
-    logging.error(type(images[0]))
+def create_place_images(place_id: int, images: list[ImageFile]) -> list[PlaceImage]:
     try:
         current_place_images = PlaceImage.objects.filter(place_id=place_id).count()
         if (len(images) + current_place_images) > PLACE_IMAGES_LIMIT:
