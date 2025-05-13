@@ -6,6 +6,7 @@ from django.db.models import QuerySet
 
 from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
+from apps.places.tasks import process_uploaded_images
 from apps.users.models import BaseUser
 
 logger = logging.getLogger(__name__)
@@ -62,10 +63,21 @@ def create_place_images(place_id: int, images: list[ImageFile]) -> list[PlaceIma
                 }
             )
 
-        return [
-            PlaceImage.objects.create(place_id=place_id, image=image)
-            for image in images
-        ]
+        created_place_images = []
+
+        for image in images:
+            place_image = PlaceImage(place_id=place_id, image=image)
+            place_image.full_clean
+            place_image.save()
+            created_place_images.append(place_image)
+
+            process_uploaded_images.enqueue(
+                file_path=place_image.image.path,
+                root_folder="place_images",
+                parent_folder=str(place_image.id),
+            )
+
+        return created_place_images
 
     except Place.DoesNotExist as e:
         raise ValidationError(

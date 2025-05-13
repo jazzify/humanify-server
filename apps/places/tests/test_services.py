@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 import pytest
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -120,8 +123,9 @@ def test_create_place_with_tags(user):
         assert tag.user == user
 
 
+@patch("apps.places.services.process_uploaded_images")
 @pytest.mark.django_db
-def test_create_place_images(user):
+def test_create_place_images(mock_process_uploaded_images, user):
     place = PlaceFactory(user=user)
 
     image1 = SimpleUploadedFile(
@@ -129,7 +133,7 @@ def test_create_place_images(user):
         content=b"GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
         content_type="image/jpeg",
     )
-    image2 = SimpleUploadedFile(
+    SimpleUploadedFile(
         name="test_image2.jpg",
         content=b"GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
         content_type="image/jpeg",
@@ -137,10 +141,16 @@ def test_create_place_images(user):
 
     create_place_images(
         place_id=place.id,
-        images=[image1, image2],
+        images=[image1],
     )
 
-    assert place.images.count() == 2
+    assert place.images.count() == 1
+
+    mock_process_uploaded_images.enqueue.assert_called_once_with(
+        file_path=f"{settings.MEDIA_ROOT}/place_images/test_image1.jpg",
+        root_folder="place_images",
+        parent_folder=str(1),
+    )
 
 
 @pytest.mark.django_db
