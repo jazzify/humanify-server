@@ -38,6 +38,8 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "corsheaders",
+    "django_tasks",
+    "django_tasks.backends.database",
 ]
 
 INSTALLED_APPS = [
@@ -199,6 +201,7 @@ AUTH_USER_MODEL = "users.BaseUser"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-from humanify_project.extra_settings.rest_framework import *  # noqa
+from humanify_project.extra_settings.django_tasks import *  # noqa
 from humanify_project.extra_settings.drf_spectacular import *  # noqa
 from humanify_project.extra_settings.drf_simplejwt import *  # noqa
+from humanify_project.extra_settings.rest_framework import *  # noqa

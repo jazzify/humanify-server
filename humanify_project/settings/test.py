@@ -29,3 +29,12 @@ STORAGES = {  # noqa F405
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+
+# Django Tasks
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
+        "QUEUES": ["place_images"],
+        "ENQUEUE_ON_COMMIT": False,
+    }
+}
