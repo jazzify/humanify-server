@@ -1,98 +1,81 @@
 import logging
-import uuid
 from concurrent import futures as cfutures
+from typing import Type
 
 from django.conf import settings
 from PIL import Image as PImage
-from PIL import ImageFilter
 
 from apps.images.constants import ImageTransformations
+from apps.images.data_models import TransformationDataClass
+from apps.images.transformations import (
+    ImageTransformationCallable,
+    TransformationBlackAndWhite,
+    TransformationBlur,
+    TransformationThumbnail,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def create_processed_media_folder_structure(
-    root_folder: str, parent_folder: str
-) -> None:
-    root_folder_path = f"{settings.MEDIA_ROOT}/processed/{root_folder}"
-    if not settings.MEDIA_ROOT.joinpath(root_folder_path).exists():
-        settings.MEDIA_ROOT.joinpath(root_folder_path).mkdir()
+class ImageTransformationService:
+    def __init__(
+        self,
+        image_path: str,
+        root_folder: str,
+        parent_folder: str,
+        transformations: list[ImageTransformations],
+    ) -> None:
+        self._SUPORTED_TRANSFORMATIONS: dict[
+            ImageTransformations, Type[ImageTransformationCallable]
+        ] = {
+            ImageTransformations.THUMBNAIL: TransformationThumbnail,
+            ImageTransformations.BLACK_AND_WHITE: TransformationBlackAndWhite,
+            ImageTransformations.BLUR: TransformationBlur,
+        }
+        self.image_path = image_path
+        self.root_folder = root_folder
+        self.parent_folder = parent_folder
+        self.transformations = transformations
+        self._transformations: list[TransformationDataClass] = []
+        self._create_transformations_folders()
 
-    parent_folder_path = (
-        f"{settings.MEDIA_ROOT}/processed/{root_folder}/{parent_folder}"
-    )
-    if not settings.MEDIA_ROOT.joinpath(parent_folder_path).exists():
-        settings.MEDIA_ROOT.joinpath(parent_folder_path).mkdir()
-
-    for process in ImageTransformations:
-        process_path = (
-            f"{settings.MEDIA_ROOT}/processed/{root_folder}/{parent_folder}/{process}"
+    def _create_transformations_folders(self) -> None:
+        """
+        Creates the folders required for the processed images.
+        """
+        processed_folder = (
+            settings.MEDIA_ROOT / "processed" / self.root_folder / self.parent_folder
         )
-        if not settings.MEDIA_ROOT.joinpath(process_path).exists():
-            settings.MEDIA_ROOT.joinpath(process_path).mkdir()
+        processed_folder.mkdir(parents=True, exist_ok=True)
 
+        for transformation in self.transformations:
+            if transformation not in self._SUPORTED_TRANSFORMATIONS.keys():
+                logger.error(f"Invalid/unsupported transformation: {transformation}")
+                continue
 
-def image_apply_generators(
-    image_path: str, root_folder: str, parent_folder: str
-) -> None:
-    logger.info(f"Processing image: {image_path}")
-    create_processed_media_folder_structure(root_folder, parent_folder)
+            transformation_folder = processed_folder / transformation
+            transformation_folder.mkdir(parents=True, exist_ok=True)
 
-    image_path_thumbnail = image_outfile_name(
-        ImageTransformations.THUMBNAIL, root_folder, parent_folder
-    )
-    image_path_blur = image_outfile_name(
-        ImageTransformations.BLUR, root_folder, parent_folder
-    )
-    image_path_bw = image_outfile_name(
-        ImageTransformations.BLACK_AND_WHITE, root_folder, parent_folder
-    )
-    try:
+            self._transformations.append(
+                TransformationDataClass(
+                    transformation=self._SUPORTED_TRANSFORMATIONS[transformation],
+                    file_relative_path=transformation_folder,
+                )
+            )
+
+    def apply_transformations(self) -> None:
+        logger.info(f"Processing image: {self.image_path}")
         with cfutures.ProcessPoolExecutor(max_workers=5) as executor, PImage.open(
-            image_path
+            self.image_path
         ) as img:
             image_copy = img.copy()
-            futures = [
+            futures: list[cfutures.Future[ImageTransformationCallable]] = [
                 executor.submit(
-                    image_generate_thumbnail, image_copy, image_path_thumbnail
-                ),
-                executor.submit(image_generate_blur, image_copy, image_path_blur),
-                executor.submit(
-                    image_generate_black_and_white, image_copy, image_path_bw
-                ),
+                    transformation.transformation,
+                    image_copy,
+                    transformation.file_relative_path,
+                )
+                for transformation in self._transformations
             ]
-            cfutures.wait(futures)
-            logger.info(f"{[future.result() for future in futures]}")
-    except Exception as e:
-        logger.error(f"Error processing image: {e}")
-        raise e
-
-
-def image_outfile_name(
-    process: ImageTransformations,
-    root_folder: str,
-    parent_folder: str,
-    file_ext: str = "png",
-) -> str:
-    return f"{settings.MEDIA_ROOT}/processed/{root_folder}/{parent_folder}/{process}/{uuid.uuid4()}.{file_ext}"
-
-
-def image_generate_thumbnail(img: PImage.Image, file_name: str) -> str:
-    img.thumbnail((128, 128))
-    img.save(file_name)
-    logger.info(f"Generated thumbnail: {file_name}")
-    return file_name
-
-
-def image_generate_blur(img: PImage.Image, file_name: str) -> str:
-    new_img = img.filter(ImageFilter.BLUR)
-    new_img.save(file_name)
-    logger.info(f"Generated blur: {file_name}")
-    return file_name
-
-
-def image_generate_black_and_white(img: PImage.Image, file_name: str) -> str:
-    new_img = img.convert("L")
-    new_img.save(file_name)
-    logger.info(f"Generated B&W: {file_name}")
-    return file_name
+            for f in cfutures.as_completed(futures):
+                logger.info(f"Transformation completed for: {f.result().file_name}")
