@@ -51,6 +51,36 @@ def place_create(
     return place
 
 
+def place_retrieve_by_id_and_user(place_id: int, user: BaseUser) -> Place:
+    try:
+        return Place.objects.select_related(
+            "user",
+        ).get(id=place_id, user=user)
+    except Place.DoesNotExist as e:
+        raise ValidationError(
+            {
+                "place_id": [
+                    f"Place with id {place_id} does not exist for user {user.email}"
+                ]
+            }
+        )
+
+
+def place_delete_by_id_and_user(place_id: int, user: BaseUser) -> None:
+    try:
+        Place.objects.select_related(
+            "user",
+        ).get(id=place_id, user=user).delete()
+    except Place.DoesNotExist as e:
+        raise ValidationError(
+            {
+                "place_id": [
+                    f"Place with id {place_id} does not exist for user {user.email}"
+                ]
+            }
+        )
+
+
 def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceImage]:
     try:
         current_place_images = PlaceImage.objects.filter(place_id=place_id).count()
