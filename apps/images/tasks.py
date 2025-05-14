@@ -2,7 +2,7 @@ from django_tasks import task
 
 
 @task(queue_name="place_images")
-def process_uploaded_images(
+def transform_uploaded_images(
     file_path: str, root_folder: str, parent_folder: str
 ) -> None:
     from apps.images.constants import ImageTransformations
