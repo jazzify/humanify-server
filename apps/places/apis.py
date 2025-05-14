@@ -12,13 +12,13 @@ from apps.places.serializers import (
     PlaceSerializer,
 )
 from apps.places.services import (
-    create_place,
-    create_place_images,
-    get_all_places_by_user,
+    place_create,
+    place_images_create,
+    place_retrieve_all_by_user,
 )
 
 
-class CreatePlaceImageAPI(APIView):
+class PlaceImageAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -33,7 +33,7 @@ class CreatePlaceImageAPI(APIView):
         serializer = PlaceImageCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        create_place_images(
+        place_images_create(
             place_id=place_id,
             images=serializer.validated_data["files"],
         )
@@ -41,7 +41,7 @@ class CreatePlaceImageAPI(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
 
-class CreateListPlaceAPI(APIView):
+class PlaceAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -55,7 +55,7 @@ class CreateListPlaceAPI(APIView):
     def post(self, request: Request) -> Response:
         serializer = PlaceCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        create_place(
+        place_create(
             user=request.user,
             name=serializer.validated_data["name"],
             description=serializer.validated_data["description"],
@@ -72,7 +72,7 @@ class CreateListPlaceAPI(APIView):
         responses={status.HTTP_200_OK: PlaceSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:
-        places = get_all_places_by_user(user=request.user)
+        places = place_retrieve_all_by_user(user=request.user)
         serializer = PlaceSerializer(places, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
