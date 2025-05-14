@@ -4,15 +4,15 @@ from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
 from django.db.models import QuerySet
 
+from apps.images.tasks import transform_uploaded_images
 from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
-from apps.places.tasks import process_uploaded_images
 from apps.users.models import BaseUser
 
 logger = logging.getLogger(__name__)
 
 
-def get_all_places_by_user(user: BaseUser) -> QuerySet[Place]:
+def place_retrieve_all_by_user(user: BaseUser) -> QuerySet[Place]:
     return (
         Place.objects.select_related(
             "user",
@@ -22,7 +22,7 @@ def get_all_places_by_user(user: BaseUser) -> QuerySet[Place]:
     )
 
 
-def create_place(
+def place_create(
     user: BaseUser,
     name: str,
     city: str,
@@ -51,7 +51,7 @@ def create_place(
     return place
 
 
-def create_place_images(place_id: int, images: list[ImageFile]) -> list[PlaceImage]:
+def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceImage]:
     try:
         current_place_images = PlaceImage.objects.filter(place_id=place_id).count()
         if (len(images) + current_place_images) > PLACE_IMAGES_LIMIT:
@@ -71,7 +71,7 @@ def create_place_images(place_id: int, images: list[ImageFile]) -> list[PlaceIma
             place_image.save()
             created_place_images.append(place_image)
 
-            process_uploaded_images.enqueue(
+            transform_uploaded_images.enqueue(
                 file_path=place_image.image.path,
                 root_folder="place_images",
                 parent_folder=str(place_image.id),
@@ -86,5 +86,5 @@ def create_place_images(place_id: int, images: list[ImageFile]) -> list[PlaceIma
     except ValidationError as e:
         raise e
     except Exception as e:
-        logger.error(f"Unhandled exception in create_place_images: {e}")
+        logger.error(f"Unhandled exception in place_images_create: {e}")
         raise e
