@@ -6,10 +6,13 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.places.constants import PLACE_IMAGES_LIMIT
+from apps.places.models import Place
 from apps.places.services import (
     place_create,
+    place_delete_by_id_and_user,
     place_images_create,
     place_retrieve_all_by_user,
+    place_retrieve_by_id_and_user,
 )
 from apps.places.tests.factories import PlaceFactory, PlaceImageFactory, PlaceTagFactory
 
@@ -185,3 +188,75 @@ def test_place_images_create_invalid_place():
     )
     with pytest.raises(ValidationError, match="Place with id"):
         place_images_create(place_id=invalid_place_id, images=[image])
+
+
+@pytest.mark.django_db
+def test_place_retrieve_by_id_and_user_success(user, django_assert_num_queries):
+    place = PlaceFactory(user=user)
+
+    with django_assert_num_queries(1):
+        retrieved_place = place_retrieve_by_id_and_user(place_id=place.id, user=user)
+        assert retrieved_place == place
+        assert retrieved_place.user == user
+
+
+@pytest.mark.django_db
+def test_place_retrieve_by_id_and_user_not_found(user):
+    non_existent_place_id = 99999
+    with pytest.raises(ValidationError) as excinfo:
+        place_retrieve_by_id_and_user(place_id=non_existent_place_id, user=user)
+        assert (
+            str(excinfo.value.message_dict["place_id"][0])
+            == f"Place with id {non_existent_place_id} does not exist for user {user.email}"
+        )
+
+
+@pytest.mark.django_db
+def test_place_retrieve_by_id_and_user_different_user(user, other_user):
+    place_other_user = PlaceFactory(user=other_user)
+    with pytest.raises(ValidationError) as excinfo:
+        place_retrieve_by_id_and_user(place_id=place_other_user.id, user=user)
+        assert (
+            str(excinfo.value.message_dict["place_id"][0])
+            == f"Place with id {place_other_user.id} does not exist for user {user.email}"
+        )
+
+
+@pytest.mark.django_db
+def test_place_delete_by_id_and_user_success(user, django_assert_num_queries):
+    place = PlaceFactory(user=user)
+    place_id = place.id
+
+    with django_assert_num_queries(4):
+        place_delete_by_id_and_user(place_id=place_id, user=user)
+
+    with pytest.raises(Place.DoesNotExist):
+        Place.objects.get(id=place_id)
+
+
+@pytest.mark.django_db
+def test_place_delete_by_id_and_user_not_found(user):
+    non_existent_place_id = 999999
+    with pytest.raises(ValidationError) as excinfo:
+        place_delete_by_id_and_user(place_id=non_existent_place_id, user=user)
+    assert "place_id" in excinfo.value.message_dict
+    assert (
+        f"Place with id {non_existent_place_id} does not exist for user {user.email}"
+        in excinfo.value.message_dict["place_id"]
+    )
+
+
+@pytest.mark.django_db
+def test_place_delete_by_id_and_user_different_user(user, other_user):
+    place_other_user = PlaceFactory(user=other_user)
+
+    with pytest.raises(ValidationError) as excinfo:
+        place_delete_by_id_and_user(place_id=place_other_user.id, user=user)
+
+    assert "place_id" in excinfo.value.message_dict
+    assert (
+        f"Place with id {place_other_user.id} does not exist for user {user.email}"
+        in excinfo.value.message_dict["place_id"]
+    )
+
+    assert Place.objects.filter(id=place_other_user.id).exists()
