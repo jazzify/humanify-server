@@ -1,6 +1,7 @@
 # Django Rest Framework Base Project
+[![CI](https://github.com/jazzify/humanify-server/actions/workflows/main.yml/badge.svg)](https://github.com/jazzify/humanify-server/actions/workflows/main.yml)
 
-### Built with:
+### Built with
 - Docker + Compose
 - Gunicorn
 - Whitenoise
@@ -25,6 +26,55 @@
     ```sh
     task compose-up -- -d
     ```
+1. (Optionally) run `django-tasks` worker for all queues:
+    ```sh
+    task manage-db_worker -- --queue-name="*" --interval=2
+    ```
+
+## App Structure and Conventions
+We follow specific conventions to organize our Django apps for clarity and maintainability:
+- **`urls.py` for URL Routing**: We use `urls.py` to define URL-API patterns for the app.
+- **`models.py` for Database Models**: We use `models.py` to define database models.
+- **`serializers.py` for Serialization**: We use `serializers.py` to define serialization logic.
+- **`apis.py` instead of `views.py`**: For API endpoint definitions, we use `apis.py`. This helps differentiate API logic from traditional Django views that might render templates.
+- **`services.py` for Business Logic**: All core business logic should reside in `services.py`. This file acts as a central hub for the application's primary functionalities.
+- **`constants.py` for Constants**: We use `constants.py` to store constant values that are used throughout the application. This file helps in keeping values consistent and easy to maintain.
+- **`data_models.py` for Data Models**: We use `data_models.py` to define data structures for our application objects.
+- **`tasks.py` for Background Tasks**: We use `tasks.py` to define background tasks.
+- **Specific Internal Logic**: For highly specific or internal app logic (e.g., image transformations), you can create custom files within the app's directory (e.g., `images/transformations.py`).
+
+### Apps Conventions
+- **Shared Components**: `constants`, `services` and `tasks` are think to be accessible by other apps. Place widely used constants and reusable service functions here.
+
+### Apps Structure Disclaimer
+We can use folders to group related files/components within an app splitting the codebase into more manageable and organized sections as the project grows and complexity increases:
+```bash
+# Places `services` may start like:
+places/
+    __init__.py
+    services.py
+
+# and become:
+places/
+    __init__.py
+    services/
+        __init__.py
+        place.py
+        place_image.py
+```
+Once this pattern is applied in any app component we highly recommend to switch to this pattern for other app components to follow a domain-like structure.
+
+## General key conventions
+- **Method Naming**: We use an `object_action[_context]` naming convention for methods (e.g., `place_retrieve_by_user()`, `user_update()`). This helps in keeping the codebase organized and easy to navigate.
+
+## Current Apps
+- **users**: The `users` app handles user-related functionalities.
+- **api**: The `api` app centralize API routing. This app typically contains api versions that includes URL patterns from other apps, providing a single entry point for all API requests and making versioning or global API changes more manageable.
+- **common**: The `common` app is used to house highly generic and reusable code as public services that are not specific nor related to any single application but are used across the project. This promotes DRY principles and keeps app-specific logic clean.
+- **images**: The `images` app handle general image-related functionalities, such as processing, and transformations.
+- **places**: The `places` app allows to create and handle `Places`.
+    - A `Place` is a basic virtual representations of a real place with a real-world counterpart.
+
 
 ## Taskfile and Docker
 The tasks defined in the Taskfile are executed within a Docker container, which has a volume mounted to the host PC. This volume specifically includes the application's codebase, allowing for a seamless integration between the development environment on the host and the containerized tasks.
@@ -56,6 +106,9 @@ Run `task --list` to see a full list of available tasks with their description.
 
 - **Common manage.py commands**
     ```bash
+    # run django-tasks worker for a queue
+    task manage-db_worker -- --queue-name="queue_name" --interval=2
+
     # create a super user
     task manage-createsuperuser
 
@@ -69,11 +122,33 @@ Run `task --list` to see a full list of available tasks with their description.
     task manage-startapp -- <app_name>
     ```
 
-**DISCLAIMER**: Even with this volume approach some tasks might **NOT** reflect the changes in the host machine, for example, running `task uv-add -- requests` will install the `requests` lib dependency inside the docker container only, and you would need to install it via `uv add requests` locally if you want to have editor completitions or linting for the lib. Because we mainly work with Windows OS, this is actually the behaviour we want since there are some libraries that might work fine in the container (linux), but not in the host machine.
+**DISCLAIMER**: Even with this volume approach some tasks might **NOT** reflect the changes in the host machine, for example, running `task uv-add -- requests` will install the `requests` lib dependency inside the docker container only, and you would need to install it via `uv add requests` locally if you want to have editor completitions or linting for the lib. This is the actual behaviour we want, we highly encourage to develop in a containerized environment and not in the host machine since some dependencies might need custom OS dependencies that we might forget to add to the Dockerfile while working in a non-containerized environment.
 
 The best approach to install a dependency in the host and a running container is to install it locally with `uv add <dependency_name>` and then run `task uv-sync`.
 
-If you add a new task that does not work with the volume approach, please add `[CONTAINER_ONLY]` tag to the task description.
+_If you add a new task that does not work with the volume approach, please add `[CONTAINER_ONLY]` tag to the task description._
+
+## Background Tasks
+We are currently using [django-tasks](https://django-tasks.readthedocs.io/en/latest/) for background tasks.
+
+### Usage
+To run the background task worker:
+
+```bash
+# Run the worker for specific queues
+task manage-db_worker -- --queue-name="place_images,users"
+
+# Run the worker for all queues
+task manage-db_worker -- --queue-name="*"
+
+# Run the worker with a specific interval (in seconds) (default is 1)
+task manage-db_worker -- --queue-name="*" --interval=20
+```
+
+### Recommendations
+- **Queue Names**: It's good practice to use descriptive queue names to organize tasks. For example, `image_processing`, `notifications`, `data_cleanup`.
+- Consider the priority and resource consumption of tasks when assigning them to queues.
+
 
 ## Testing
 Currently we use [pytest-django](https://pytest-django.readthedocs.io/en/latest/index.html) for testing our code.
@@ -94,4 +169,4 @@ task test -- path/to/test_file_example.py::test_example
 ```
 
 ## API docs generation
-- [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/index.html)
+The API docs are generated based on the code using [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/index.html).
