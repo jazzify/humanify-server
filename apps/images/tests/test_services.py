@@ -1,5 +1,5 @@
 import os
-from pathlib import Path, PosixPath
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 from django.conf import settings
@@ -45,25 +45,17 @@ def test_apply_transformations(
             call(
                 TransformationThumbnail,
                 mock_img_copy,
-                Path(settings.MEDIA_ROOT)
-                / "processed"
-                / "root"
-                / "parent"
-                / "thumbnail",
+                f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
             ),
             call(
                 TransformationBlackAndWhite,
                 mock_img_copy,
-                Path(settings.MEDIA_ROOT)
-                / "processed"
-                / "root"
-                / "parent"
-                / "black_and_white",
+                f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
             ),
             call(
                 TransformationBlur,
                 mock_img_copy,
-                Path(settings.MEDIA_ROOT) / "processed" / "root" / "parent" / "blur",
+                f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
             ),
         ],
         any_order=True,

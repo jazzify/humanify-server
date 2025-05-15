@@ -1,5 +1,6 @@
 import logging
 from concurrent import futures as cfutures
+from pathlib import Path
 from typing import Type
 
 from django.conf import settings
@@ -44,17 +45,17 @@ class ImageTransformationService:
         Creates the folders required for the processed images.
         """
         processed_folder = (
-            settings.MEDIA_ROOT / "processed" / self.root_folder / self.parent_folder
+            f"{settings.MEDIA_ROOT}/processed/{self.root_folder}/{self.parent_folder}"
         )
-        processed_folder.mkdir(parents=True, exist_ok=True)
+        Path(processed_folder).mkdir(parents=True, exist_ok=True)
 
         for transformation in self.transformations:
             if transformation not in self._SUPORTED_TRANSFORMATIONS.keys():
                 logger.error(f"Invalid/unsupported transformation: {transformation}")
                 continue
 
-            transformation_folder = processed_folder / transformation
-            transformation_folder.mkdir(parents=True, exist_ok=True)
+            transformation_folder = f"{processed_folder}/{transformation.value}"
+            Path(transformation_folder).mkdir(parents=True, exist_ok=True)
 
             self._transformations.append(
                 TransformationDataClass(

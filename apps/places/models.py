@@ -13,7 +13,7 @@ class PlaceTag(BaseModel):
     name = models.CharField(max_length=10)
 
     def __str__(self) -> str:
-        return self.name  # type: ignore[no-any-return]
+        return self.name
 
     class Meta:
         unique_together = ["user", "name"]
@@ -31,7 +31,7 @@ class Place(BaseModel):
     tags = models.ManyToManyField(PlaceTag, related_name="places")
 
     def __str__(self) -> str:
-        return self.name  # type: ignore[no-any-return]
+        return self.name
 
     class Meta:
         ordering = ["-created_at"]

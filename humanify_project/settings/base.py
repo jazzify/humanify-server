@@ -20,10 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Django settings
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS").strip().split(",")  # type: ignore
-CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_CORS_ALLOWED_ORIGINS").strip().split(",")  # type: ignore
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").strip().split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", "").strip().split(",")
 CORS_ALLOW_ALL_ORIGINS = False if CORS_ALLOWED_ORIGINS else True
-CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS").strip().split(",")  # type: ignore
+CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip().split(",")
 
 LOCAL_APPS = [
     "apps.api",
@@ -68,11 +68,23 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "mediafiles"
+
 # https://docs.djangoproject.com/en/5.1/ref/settings/#storages
 # https://whitenoise.readthedocs.io/en/latest/django.html#add-compression-and-caching-support
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": MEDIA_ROOT,
+            "base_url": MEDIA_URL,
+        },
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
@@ -185,14 +197,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-# Media files
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 # Custom User Model
 AUTH_USER_MODEL = "users.BaseUser"
