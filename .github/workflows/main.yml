@@ -28,9 +28,36 @@ jobs:
           DJANGO_CORS_ALLOWED_ORIGINS: "*"
           DJANGO_CSRF_TRUSTED_ORIGINS: "*"
         run: |
-          export PATH="/home/runner/.uv/bin:$PATH"
-          uv run coverage run -m pytest --no-migrations -p no:logging
-          uv run coverage report -m --omit="*/tests/*,humanify_project/*,apps/*/models.py,apps/conftest.py" --skip-empty
+          uv run coverage run -m pytest --no-migrations
+          uv run coverage xml -o .report/coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: .report/coverage.xml
+
+  coverage:
+    needs: testing
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: .report
+
+      - name: Get Cover
+        uses: orgoro/coverage@v3.2
+        with:
+            coverageFile: .report/coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}
+            thresholdAll: 0.9
+            thresholdNew: 0.9
+            thresholdModified: 0.9
 
   pre-commit:
     runs-on: ubuntu-latest
