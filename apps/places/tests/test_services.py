@@ -11,6 +11,7 @@ from apps.places.services import (
     place_create,
     place_delete_by_id_and_user,
     place_images_create,
+    place_images_retrive_by_place_id_and_user,
     place_retrieve_all_by_user,
     place_retrieve_by_id_and_user,
 )
@@ -260,3 +261,43 @@ def test_place_delete_by_id_and_user_different_user(user, other_user):
     )
 
     assert Place.objects.filter(id=place_other_user.id).exists()
+
+
+@pytest.mark.django_db
+def test_place_images_retrive_by_place_id_and_user_success(
+    user, django_assert_num_queries
+):
+    place = PlaceFactory(user=user)
+    image1 = PlaceImageFactory(place=place)
+    image2 = PlaceImageFactory(place=place)
+
+    with django_assert_num_queries(1):
+        retrieved_images = place_images_retrive_by_place_id_and_user(place.id, user)
+        assert len(retrieved_images) == 2
+        for image in retrieved_images:
+            assert image.place == place
+            assert image in [image1, image2]
+
+
+@pytest.mark.django_db
+def test_place_images_retrive_by_place_id_and_user_no_images(user):
+    place = PlaceFactory(user=user)
+    retrieved_images = place_images_retrive_by_place_id_and_user(place.id, user)
+    assert len(retrieved_images) == 0
+
+
+@pytest.mark.django_db
+def test_place_images_retrive_by_place_id_and_user_different_user(user, other_user):
+    place_other_user = PlaceFactory(user=other_user)
+    PlaceImageFactory(place=place_other_user)
+    retrieved_images = place_images_retrive_by_place_id_and_user(
+        place_other_user.id, user
+    )
+    assert len(retrieved_images) == 0
+
+
+@pytest.mark.django_db
+def test_place_images_retrive_by_place_id_and_user_invalid_place(user):
+    invalid_place_id = 999999
+    retrieved_images = place_images_retrive_by_place_id_and_user(invalid_place_id, user)
+    assert len(retrieved_images) == 0
