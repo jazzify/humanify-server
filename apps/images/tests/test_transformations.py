@@ -1,8 +1,19 @@
+import inspect
 from unittest.mock import patch
 
 from PIL import ImageFilter
 
 from apps.images import transformations as image_transformations
+from apps.images.abstract_classes import ImageTransformationCallable
+
+
+def test_image_tranformation_implementation():
+    for _, cls_obj in inspect.getmembers(image_transformations):
+        assert not inspect.ismethod(cls_obj)
+        assert not inspect.ismethodwrapper(cls_obj)
+
+        if inspect.isclass(cls_obj):
+            assert issubclass(cls_obj, ImageTransformationCallable)
 
 
 @patch("PIL.Image.Image")

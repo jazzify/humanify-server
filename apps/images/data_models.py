@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Type
 
-from apps.images.transformations import ImageTransformationCallable
+from apps.images.abstract_classes import ImageTransformationCallable
 
 
 @dataclass
 class TransformationDataClass:
-    transformation: Type[ImageTransformationCallable]
+    transform: Type[ImageTransformationCallable]
     file_relative_path: str
