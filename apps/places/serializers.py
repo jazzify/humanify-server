@@ -17,12 +17,36 @@ class PlaceTagSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class PlaceCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField(
+        max_length=500, required=False, allow_blank=True
+    )
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+    tags = serializers.ListField(child=serializers.CharField(max_length=10))
+    favorite = serializers.BooleanField(required=False)
+
+
+class PlaceImageCreateSerializer(serializers.Serializer):
+    files = serializers.ListField(
+        child=serializers.ImageField(write_only=True, required=False),
+        write_only=True,
+        required=False,
+        max_length=PLACE_IMAGES_LIMIT,
+    )
+
+
+class PlaceImageDetailSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    place = serializers.ReadOnlyField(source="place.id")
+    image = serializers.ImageField()
+
+
 class PlaceSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
-    images = serializers.SerializerMethodField()
-
-    def get_images(self, obj: Place) -> list[str]:
-        return [image.image_url for image in obj.images.all()]
+    images = PlaceImageDetailSerializer(many=True)
 
     def get_tags(self, obj: Place) -> list[str]:
         return [tag.name for tag in obj.tags.all()]
@@ -44,24 +68,3 @@ class PlaceSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-
-class PlaceCreateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100)
-    description = serializers.CharField(
-        max_length=500, required=False, allow_blank=True
-    )
-    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    latitude = serializers.FloatField()
-    longitude = serializers.FloatField()
-    tags = serializers.ListField(child=serializers.CharField(max_length=10))
-    favorite = serializers.BooleanField(required=False)
-
-
-class PlaceImageCreateSerializer(serializers.Serializer):
-    files = serializers.ListField(
-        child=serializers.ImageField(write_only=True, required=False),
-        write_only=True,
-        required=False,
-        max_length=PLACE_IMAGES_LIMIT,
-    )

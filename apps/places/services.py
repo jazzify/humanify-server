@@ -118,3 +118,11 @@ def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceIma
     except Exception as e:
         logger.error(f"Unhandled exception in place_images_create: {e}")
         raise e
+
+
+def place_images_retrive_by_place_id_and_user(
+    place_id: int, user: BaseUser
+) -> QuerySet[PlaceImage]:
+    return PlaceImage.objects.select_related(
+        "place",
+    ).filter(place_id=place_id, place__user=user)

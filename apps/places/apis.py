@@ -10,12 +10,14 @@ from apps.api.serializers import ValidationErrorSerializer
 from apps.places.serializers import (
     PlaceCreateSerializer,
     PlaceImageCreateSerializer,
+    PlaceImageDetailSerializer,
     PlaceSerializer,
 )
 from apps.places.services import (
     place_create,
     place_delete_by_id_and_user,
     place_images_create,
+    place_images_retrive_by_place_id_and_user,
     place_retrieve_all_by_user,
     place_retrieve_by_id_and_user,
 )
@@ -43,6 +45,20 @@ class PlaceImageAPI(APIView):
         )
 
         return Response(status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        summary="Retrieve place images",
+        responses={
+            status.HTTP_200_OK: PlaceImageDetailSerializer,
+            status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+        },
+    )
+    def get(self, request: Request, place_id: int) -> Response:
+        place_images = place_images_retrive_by_place_id_and_user(
+            place_id=place_id, user=request.user
+        )
+        serializer = PlaceImageDetailSerializer(place_images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PlaceDetailAPI(APIView):
