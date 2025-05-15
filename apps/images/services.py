@@ -76,13 +76,10 @@ class ImageTransformationService:
             image_copy = img.copy()
             if len(self._transformations) < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
                 for transformation in self._transformations:
-                    transformation.transform(
+                    file_name = transformation.transform(
                         image_copy, transformation.file_relative_path
                     )
-                    # TODO: add file_name to logger instead of file_relative_path
-                    logger.info(
-                        f"Transformation completed for: {transformation.file_relative_path}"
-                    )
+                    logger.info(f"Transformation completed for: {file_name}")
             else:
                 with cfutures.ProcessPoolExecutor(max_workers=5) as executor:
                     futures: list[cfutures.Future[ImageTransformationCallable]] = [

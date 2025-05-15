@@ -9,10 +9,11 @@ from apps.images.abstract_classes import ImageTransformationCallable
 
 def test_image_tranformation_implementation():
     for _, cls_obj in inspect.getmembers(image_transformations):
-        assert not inspect.ismethod(cls_obj)
-        assert not inspect.ismethodwrapper(cls_obj)
-
-        if inspect.isclass(cls_obj):
+        obj_module = getattr(cls_obj, "__module__", None)
+        if obj_module and cls_obj.__module__ == image_transformations.__name__:
+            assert inspect.isclass(cls_obj)
+            assert not inspect.ismethod(cls_obj)
+            assert not inspect.ismethodwrapper(cls_obj)
             assert issubclass(cls_obj, ImageTransformationCallable)
 
 
