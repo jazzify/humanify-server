@@ -25,12 +25,13 @@ repos:
     hooks:
       - id: mypy
         args: [--strict, --disable-error-code=misc]
-        exclude: "[a-zA-Z]*/(migrations|tests|settings)/(.)*"
         additional_dependencies: [
+          django-stubs,
           django,
+          whitenoise,
           djangorestframework,
           drf-spectacular,
           drf_spectacular_sidecar,
-          gunicorn,
-          requests,
+          django-cors-headers,
+          django-tasks,
         ]

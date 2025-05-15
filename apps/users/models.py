@@ -5,7 +5,7 @@ from django.contrib.auth.models import BaseUserManager as DjangoBaseUserManager
 from django.db import models
 
 
-class BaseUserManager(DjangoBaseUserManager):
+class BaseUserManager(DjangoBaseUserManager["BaseUser"]):
     def create_user(
         self,
         email: str,
@@ -30,7 +30,7 @@ class BaseUserManager(DjangoBaseUserManager):
 
         user.full_clean()
         user.save(using=self._db)
-        return user  # type: ignore[no-any-return]
+        return user
 
     def create_superuser(self, email: str, password: str | None = None) -> "BaseUser":
         user = self.create_user(

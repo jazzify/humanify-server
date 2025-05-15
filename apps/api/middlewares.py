@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Callable
 
 from django.http import HttpRequest, HttpResponse
 
@@ -7,7 +8,15 @@ logger = logging.getLogger(__name__)
 
 
 class RequestIDMiddleware:
-    def __init__(self, get_response) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        get_response: Callable[
+            [
+                HttpRequest,
+            ],
+            HttpResponse,
+        ],
+    ) -> None:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
@@ -25,10 +34,9 @@ class RequestIDMiddleware:
 
         if supports_api_tracking:
             request_id = str(uuid.uuid4())
-            request._request_id = request_id
             logger.info(f"Start Request ID: {request_id}")
             response = self.get_response(request)
-            response["X-Request-ID"] = request._request_id
+            response["X-Request-ID"] = request_id
             logger.info(f"Finish Request ID: {request_id}")
             return response
 
