@@ -6,10 +6,13 @@ from typing import Type
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.images.constants import ImageTransformations
+from apps.images.abstract_classes import ImageTransformationCallable
+from apps.images.constants import (
+    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
+    ImageTransformations,
+)
 from apps.images.data_models import TransformationDataClass
 from apps.images.transformations import (
-    ImageTransformationCallable,
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
@@ -59,24 +62,38 @@ class ImageTransformationService:
 
             self._transformations.append(
                 TransformationDataClass(
-                    transformation=self._SUPORTED_TRANSFORMATIONS[transformation],
+                    transform=self._SUPORTED_TRANSFORMATIONS[transformation],
                     file_relative_path=transformation_folder,
                 )
             )
 
     def apply_transformations(self) -> None:
-        logger.info(f"Processing image: {self.image_path}")
-        with cfutures.ProcessPoolExecutor(max_workers=5) as executor, PImage.open(
-            self.image_path
-        ) as img:
+        if len(self._transformations) == 0:
+            return
+        logger.info(f"Transforming image: {self.image_path}")
+
+        with PImage.open(self.image_path) as img:
             image_copy = img.copy()
-            futures: list[cfutures.Future[ImageTransformationCallable]] = [
-                executor.submit(
-                    transformation.transformation,
-                    image_copy,
-                    transformation.file_relative_path,
-                )
-                for transformation in self._transformations
-            ]
-            for f in cfutures.as_completed(futures):
-                logger.info(f"Transformation completed for: {f.result().file_name}")
+            if len(self._transformations) < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
+                for transformation in self._transformations:
+                    transformation.transform(
+                        image_copy, transformation.file_relative_path
+                    )
+                    # TODO: add file_name to logger instead of file_relative_path
+                    logger.info(
+                        f"Transformation completed for: {transformation.file_relative_path}"
+                    )
+            else:
+                with cfutures.ProcessPoolExecutor(max_workers=5) as executor:
+                    futures: list[cfutures.Future[ImageTransformationCallable]] = [
+                        executor.submit(
+                            transformation.transform,
+                            image_copy,
+                            transformation.file_relative_path,
+                        )
+                        for transformation in self._transformations
+                    ]
+                    for f in cfutures.as_completed(futures):
+                        logger.info(
+                            f"Transformation completed for: {f.result().file_name}"
+                        )

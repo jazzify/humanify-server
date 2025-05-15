@@ -14,7 +14,9 @@ from apps.images.services import ImageTransformationService
 @patch("apps.images.services.cfutures.as_completed")
 @patch("apps.images.services.PImage.open")
 @patch("apps.images.services.cfutures.ProcessPoolExecutor")
-def test_apply_transformations(
+@patch("apps.images.services.TRANSFORMATIONS_MULTIPROCESS_TRESHOLD")
+def test_apply_transformations_multiprocess(
+    mock_transformations_treshold,
     mock_executor,
     mock_pil_open,
     mock_as_completed,
@@ -28,6 +30,7 @@ def test_apply_transformations(
         ImageTransformations.BLACK_AND_WHITE,
         ImageTransformations.BLUR,
     ]
+    mock_transformations_treshold.return_value = len(transformations) - 1
     mock_img_opened = MagicMock()
     mock_img_copy = MagicMock()
 
@@ -35,32 +38,80 @@ def test_apply_transformations(
     mock_pil_open.return_value.__enter__.return_value = mock_img_opened
     mock_pool_executor_instance = mock_executor.return_value.__enter__.return_value
 
-    image_service = ImageTransformationService(
-        img_path, "root", "parent", transformations
-    )
-    image_service.apply_transformations()
+    with patch(
+        "apps.images.services.TRANSFORMATIONS_MULTIPROCESS_TRESHOLD",
+        len(transformations) - 1,
+    ):
+        image_service = ImageTransformationService(
+            img_path, "root", "parent", transformations
+        )
+        image_service.apply_transformations()
+        mock_pool_executor_instance.submit.assert_has_calls(
+            [
+                call(
+                    TransformationThumbnail,
+                    mock_img_copy,
+                    f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
+                ),
+                call(
+                    TransformationBlackAndWhite,
+                    mock_img_copy,
+                    f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
+                ),
+                call(
+                    TransformationBlur,
+                    mock_img_copy,
+                    f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
+                ),
+            ],
+            any_order=True,
+        )
+        mock_as_completed.assert_called_once()
 
-    mock_pool_executor_instance.submit.assert_has_calls(
-        [
-            call(
-                TransformationThumbnail,
-                mock_img_copy,
-                f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
-            ),
-            call(
-                TransformationBlackAndWhite,
-                mock_img_copy,
-                f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
-            ),
-            call(
-                TransformationBlur,
-                mock_img_copy,
-                f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
-            ),
-        ],
-        any_order=True,
-    )
-    mock_as_completed.assert_called_once()
+
+@patch("apps.images.services.TransformationBlur")
+@patch("apps.images.services.TransformationBlackAndWhite")
+@patch("apps.images.services.TransformationThumbnail")
+@patch("apps.images.services.PImage.open")
+def test_apply_transformations_singleprocess(
+    mock_pil_open,
+    TransformationThumbnail,
+    TransformationBlackAndWhite,
+    TransformationBlur,
+):
+    img_path = Path("path/to/image.jpg")
+    transformations = [
+        ImageTransformations.BLUR,
+        ImageTransformations.THUMBNAIL,
+        ImageTransformations.BLACK_AND_WHITE,
+    ]
+    mock_img_opened = MagicMock()
+    mock_img_copy = MagicMock()
+
+    mock_img_opened.copy.return_value = mock_img_copy
+    mock_pil_open.return_value.__enter__.return_value = mock_img_opened
+
+    with patch(
+        "apps.images.services.TRANSFORMATIONS_MULTIPROCESS_TRESHOLD",
+        len(transformations) + 1,
+    ):
+        image_service = ImageTransformationService(
+            img_path, "root", "parent", transformations
+        )
+        image_service.apply_transformations()
+
+        TransformationThumbnail.assert_called_once_with(
+            mock_img_copy,
+            f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
+        )
+        TransformationBlackAndWhite.assert_called_once_with(
+            mock_img_copy,
+            f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
+        )
+        TransformationBlur.assert_called_once_with(
+            mock_img_copy,
+            f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
+        )
 
 
 @patch(
