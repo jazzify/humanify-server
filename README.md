@@ -1,5 +1,9 @@
 # Django Rest Framework Base Project
 [![CI](https://github.com/jazzify/humanify-server/actions/workflows/main.yml/badge.svg)](https://github.com/jazzify/humanify-server/actions/workflows/main.yml)
+[![python](https://img.shields.io/badge/Python%3A%203.13-blue)](https://www.python.org)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue)](http://mypy-lang.org/)
 
 ### Built with
 - Docker + Compose
