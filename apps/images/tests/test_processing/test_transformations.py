@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PIL import Image, ImageFilter
 
-from apps.images import transformations as image_transformations
+from apps.images.processing import transformations as image_transformations
 from apps.images.processing.abstract_classes import ImageTransformationCallable
 
 
