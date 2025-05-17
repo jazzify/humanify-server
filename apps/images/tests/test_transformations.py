@@ -5,7 +5,7 @@ import pytest
 from PIL import Image, ImageFilter
 
 from apps.images import transformations as image_transformations
-from apps.images.abstract_classes import ImageTransformationCallable
+from apps.images.processing.abstract_classes import ImageTransformationCallable
 
 
 def test_image_tranformation_implementation():

@@ -3,7 +3,7 @@ from typing import Any
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.images.abstract_classes import ImageTransformationCallable
+from apps.images.processing.abstract_classes import ImageTransformationCallable
 
 
 class TransformationThumbnail(ImageTransformationCallable):

@@ -7,7 +7,6 @@ from typing import Callable, Type
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.images.abstract_classes import ImageTransformationCallable
 from apps.images.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
@@ -16,6 +15,7 @@ from apps.images.data_models import (
     ImageTransformationCallableDataClass,
     ImageTransformationDataClass,
 )
+from apps.images.processing.abstract_classes import ImageTransformationCallable
 from apps.images.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,

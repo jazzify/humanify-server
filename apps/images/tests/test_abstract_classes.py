@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from PIL import Image as PImage
 
-from apps.images.abstract_classes import ImageTransformationCallable
+from apps.images.processing.abstract_classes import ImageTransformationCallable
 
 
 def test_image_transformation_callable_not_implemented():
