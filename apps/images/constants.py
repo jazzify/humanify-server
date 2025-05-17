@@ -8,5 +8,4 @@ class ImageTransformations(StrEnum):
     BLACK_AND_WHITE = auto()
 
 
-# Multiprocess treshold
 TRANSFORMATIONS_MULTIPROCESS_TRESHOLD = 3
