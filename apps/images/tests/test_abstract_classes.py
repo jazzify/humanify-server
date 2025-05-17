@@ -26,26 +26,8 @@ def test_image_transformation_init():
         def _image_transform(
             self, image: PImage.Image, filters: dict[str, Any]
         ) -> PImage.Image:
-            return image
+            return image(**filters)
 
-    transformation = TestNewTransformation(
-        mock_img_instance, filters={}, relative_path=relative_path
-    )
+    transformation = TestNewTransformation(mock_img_instance, filters={})
 
-    transformation.image_transformed.save.assert_called_once()
-    save_args, _ = transformation.image_transformed.save.call_args
-
-    assert save_args[0].startswith(relative_path)
-
-
-def test_image_transformation_init_validations():
-    mock_img_instance = MagicMock()
-
-    class TestNewTransformation(ImageTransformationCallable):
-        def _image_transform(
-            self, image: PImage.Image, filters: dict[str, Any]
-        ) -> PImage.Image:
-            return PImage.new("RGB", (100, 100))
-
-    with pytest.raises(ValueError):
-        TestNewTransformation(mock_img_instance, filters={}, local_persist=True)
+    transformation.image_transformed.save.assert_not_called()

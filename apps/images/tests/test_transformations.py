@@ -47,9 +47,7 @@ def test_image_tranformation_implementation():
 def test_image_generate_thumbnail(MockImage, filters, expected_filters):
     mock_img_instance = MockImage()
     mock_img_copy = mock_img_instance.copy.return_value = MagicMock()
-    image_transformations.TransformationThumbnail(
-        mock_img_instance, local_persist=False, filters=filters
-    )
+    image_transformations.TransformationThumbnail(mock_img_instance, filters=filters)
     mock_img_copy.thumbnail.assert_called_once_with(**expected_filters)
 
 
@@ -64,9 +62,7 @@ def test_image_generate_thumbnail(MockImage, filters, expected_filters):
 @patch("PIL.Image.Image")
 def test_image_generate_blur(MockImage, filters, expected_filters):
     mock_img_instance = MockImage()
-    image_transformations.TransformationBlur(
-        mock_img_instance, local_persist=False, filters=filters
-    )
+    image_transformations.TransformationBlur(mock_img_instance, filters=filters)
 
     if expected_filters["filter"]:
         mock_img_instance.filter.assert_called_once_with(expected_filters["filter"])
@@ -113,6 +109,6 @@ def test_image_generate_blur(MockImage, filters, expected_filters):
 def test_image_generate_black_and_white(MockImage, filters, expected_filters):
     mock_img_instance = MockImage()
     image_transformations.TransformationBlackAndWhite(
-        mock_img_instance, local_persist=False, filters=filters
+        mock_img_instance, filters=filters
     )
     mock_img_instance.convert.assert_called_once_with(**expected_filters)

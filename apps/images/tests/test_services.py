@@ -12,7 +12,6 @@ from apps.images.services import ImageTransformationService
 @patch("apps.images.services.TransformationBlur")
 @patch("apps.images.services.TransformationBlackAndWhite")
 @patch("apps.images.services.TransformationThumbnail")
-@patch("apps.images.services.cfutures.as_completed")
 @patch("apps.images.services.PImage.open")
 @patch("apps.images.services.cfutures.ProcessPoolExecutor")
 @patch("apps.images.services.TRANSFORMATIONS_MULTIPROCESS_TRESHOLD")
@@ -20,7 +19,6 @@ def test_apply_transformations_multiprocess(
     mock_transformations_treshold,
     mock_executor,
     mock_pil_open,
-    mock_as_completed,
     TransformationThumbnail,
     TransformationBlackAndWhite,
     TransformationBlur,
@@ -51,24 +49,20 @@ def test_apply_transformations_multiprocess(
                     TransformationThumbnail,
                     mock_img_opened,
                     {},
-                    f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
                 ),
                 call(
                     TransformationBlackAndWhite,
                     mock_img_opened,
                     {},
-                    f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
                 ),
                 call(
                     TransformationBlur,
                     mock_img_opened,
                     {},
-                    f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
                 ),
             ],
             any_order=True,
         )
-        mock_as_completed.assert_called_once()
 
 
 @patch("apps.images.services.TransformationBlur")
@@ -102,17 +96,14 @@ def test_apply_transformations_singleprocess(
         TransformationThumbnail.assert_called_once_with(
             image=mock_img_opened,
             filters={},
-            relative_path=f"{settings.MEDIA_ROOT}/processed/root/parent/thumbnail",
         )
         TransformationBlackAndWhite.assert_called_once_with(
             image=mock_img_opened,
             filters={},
-            relative_path=f"{settings.MEDIA_ROOT}/processed/root/parent/black_and_white",
         )
         TransformationBlur.assert_called_once_with(
             image=mock_img_opened,
             filters={},
-            relative_path=f"{settings.MEDIA_ROOT}/processed/root/parent/blur",
         )
 
 

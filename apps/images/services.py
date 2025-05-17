@@ -1,7 +1,8 @@
 import logging
+import uuid
 from concurrent import futures as cfutures
 from pathlib import Path
-from typing import Type
+from typing import Callable, Type
 
 from django.conf import settings
 from PIL import Image as PImage
@@ -44,6 +45,9 @@ class ImageTransformationService:
         self.parent_folder = parent_folder
         self.transformations = transformations
         self._transformation_callables: list[ImageTransformationCallableDataClass] = []
+        self._is_multiprocess_execution = (
+            len(self._transformation_callables) < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
+        )
 
         for transformation in self.transformations:
             if transformation.name not in self._TRANSFORMATIONS_MAPPER.keys():
@@ -54,13 +58,26 @@ class ImageTransformationService:
                 transformation.name
             )
 
+            file_name = f"{file_relative_path}/{uuid.uuid4()}.png"
             self._transformation_callables.append(
                 ImageTransformationCallableDataClass(
                     transform=self._TRANSFORMATIONS_MAPPER[transformation.name],
                     filters=transformation.filters,
-                    file_relative_path=file_relative_path,
+                    file_relative_path=file_name,
                 )
             )
+
+    def _save(self, image: PImage.Image, file_name: str) -> None:
+        image.save(file_name)
+        logger.info(f"Saved image: {file_name}")
+
+    def _callback_save(
+        self, file_name: str
+    ) -> Callable[[cfutures.Future[ImageTransformationCallable]], None]:
+        def callback(future: cfutures.Future[ImageTransformationCallable]) -> None:
+            self._save(future.result().image_transformed, file_name)
+
+        return callback
 
     def _create_transformation_folders(
         self, transformation: ImageTransformations
@@ -83,24 +100,22 @@ class ImageTransformationService:
                 < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
             ):
                 for transformation in self._transformation_callables:
-                    callable = transformation.transform(
+                    transformator_callable = transformation.transform(
                         image=image,
                         filters=transformation.filters,
-                        relative_path=transformation.file_relative_path,
                     )
-                    logger.info(f"Transformation completed for: {callable.file_name}")
+                    file_name = transformation.file_relative_path
+                    self._save(transformator_callable.image_transformed, file_name)
             else:
-                with cfutures.ProcessPoolExecutor(max_workers=5) as executor:
-                    futures: list[cfutures.Future[ImageTransformationCallable]] = [
-                        executor.submit(
+                with cfutures.ProcessPoolExecutor(
+                    max_workers=5, max_tasks_per_child=20
+                ) as executor:
+                    for transformation in self._transformation_callables:
+                        future = executor.submit(
                             transformation.transform,
                             image,
                             transformation.filters,
-                            transformation.file_relative_path,
                         )
-                        for transformation in self._transformation_callables
-                    ]
-                    for f in cfutures.as_completed(futures):
-                        logger.info(
-                            f"Transformation completed for: {f.result().file_name}"
+                        future.add_done_callback(
+                            self._callback_save(transformation.file_relative_path)
                         )

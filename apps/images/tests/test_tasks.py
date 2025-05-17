@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-from PIL import ImageFilter
 
 from apps.images.constants import ImageTransformations
 from apps.images.data_models import ImageTransformationDataClass
