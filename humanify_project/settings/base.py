@@ -56,7 +56,6 @@ INSTALLED_APPS = [
 
 # https://docs.djangoproject.com/en/5.1/ref/middleware/
 MIDDLEWARE = [
-    "apps.api.middlewares.RequestIDMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -66,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.api.middlewares.RequestTrackingMiddleware",
 ]
 
 # Static files (CSS, JavaScript, Images)
