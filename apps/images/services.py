@@ -11,7 +11,10 @@ from apps.images.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
 )
-from apps.images.data_models import TransformationDataClass
+from apps.images.data_models import (
+    ImageTransformationCallableDataClass,
+    ImageTransformationDataClass,
+)
 from apps.images.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
@@ -27,9 +30,9 @@ class ImageTransformationService:
         image_path: str,
         root_folder: str,
         parent_folder: str,
-        transformations: list[ImageTransformations],
+        transformations: list[ImageTransformationDataClass],
     ) -> None:
-        self._SUPORTED_TRANSFORMATIONS: dict[
+        self._TRANSFORMATIONS_MAPPER: dict[
             ImageTransformations, Type[ImageTransformationCallable]
         ] = {
             ImageTransformations.THUMBNAIL: TransformationThumbnail,
@@ -40,55 +43,62 @@ class ImageTransformationService:
         self.root_folder = root_folder
         self.parent_folder = parent_folder
         self.transformations = transformations
-        self._transformations: list[TransformationDataClass] = []
-        self._create_transformations_folders()
-
-    def _create_transformations_folders(self) -> None:
-        """
-        Creates the folders required for the processed images.
-        """
-        processed_folder = (
-            f"{settings.MEDIA_ROOT}/processed/{self.root_folder}/{self.parent_folder}"
-        )
-        Path(processed_folder).mkdir(parents=True, exist_ok=True)
+        self._transformation_callables: list[ImageTransformationCallableDataClass] = []
 
         for transformation in self.transformations:
-            if transformation not in self._SUPORTED_TRANSFORMATIONS.keys():
+            if transformation.name not in self._TRANSFORMATIONS_MAPPER.keys():
                 logger.error(f"Invalid/unsupported transformation: {transformation}")
                 continue
 
-            transformation_folder = f"{processed_folder}/{transformation.value}"
-            Path(transformation_folder).mkdir(parents=True, exist_ok=True)
+            file_relative_path = self._create_transformation_folders(
+                transformation.name
+            )
 
-            self._transformations.append(
-                TransformationDataClass(
-                    transform=self._SUPORTED_TRANSFORMATIONS[transformation],
-                    file_relative_path=transformation_folder,
+            self._transformation_callables.append(
+                ImageTransformationCallableDataClass(
+                    transform=self._TRANSFORMATIONS_MAPPER[transformation.name],
+                    filters=transformation.filters,
+                    file_relative_path=file_relative_path,
                 )
             )
 
+    def _create_transformation_folders(
+        self, transformation: ImageTransformations
+    ) -> str:
+        processed_folder = (
+            f"{settings.MEDIA_ROOT}/processed/{self.root_folder}/{self.parent_folder}"
+        )
+        transformation_folder = f"{processed_folder}/{transformation}"
+        Path(transformation_folder).mkdir(parents=True, exist_ok=True)
+        return transformation_folder
+
     def apply_transformations(self) -> None:
-        if len(self._transformations) == 0:
+        if len(self._transformation_callables) == 0:
             return
         logger.info(f"Transforming image: {self.image_path}")
 
-        with PImage.open(self.image_path) as img:
-            image_copy = img.copy()
-            if len(self._transformations) < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
-                for transformation in self._transformations:
-                    file_name = transformation.transform(
-                        image_copy, transformation.file_relative_path
+        with PImage.open(self.image_path) as image:
+            if (
+                len(self._transformation_callables)
+                < TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
+            ):
+                for transformation in self._transformation_callables:
+                    callable = transformation.transform(
+                        image=image,
+                        filters=transformation.filters,
+                        relative_path=transformation.file_relative_path,
                     )
-                    logger.info(f"Transformation completed for: {file_name}")
+                    logger.info(f"Transformation completed for: {callable.file_name}")
             else:
                 with cfutures.ProcessPoolExecutor(max_workers=5) as executor:
                     futures: list[cfutures.Future[ImageTransformationCallable]] = [
                         executor.submit(
                             transformation.transform,
-                            image_copy,
+                            image,
+                            transformation.filters,
                             transformation.file_relative_path,
                         )
-                        for transformation in self._transformations
+                        for transformation in self._transformation_callables
                     ]
                     for f in cfutures.as_completed(futures):
                         logger.info(
