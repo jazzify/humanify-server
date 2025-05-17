@@ -125,14 +125,9 @@ LOGGING = {
         },
     },
     "formatters": {
-        "json": {
-            "()": "pythonjsonlogger.json.JsonFormatter",
-            "format": "%(timestamp)s %(levelname)s %(name)s %(message)s %(pathname)s %(lineno)d %(funcName)s",
-            "timestamp": True,
-        },
         "verbose": {
             "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "datefmt": "%d-%m-%Y %H:%M:%S",
         },
     },
     "handlers": {
@@ -142,21 +137,15 @@ LOGGING = {
             "formatter": "verbose",
             "filters": ["require_debug_true"],
         },
-        "json_console": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "json",
-            "filters": ["require_debug_false"],
-        },
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "json_console"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
         "django.server": {
-            "handlers": ["console", "json_console"],
+            "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
@@ -166,7 +155,7 @@ LOGGING = {
             "propagate": False,
         },
         "apps": {
-            "handlers": ["console", "json_console"],
+            "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,
         },
