@@ -68,7 +68,6 @@ def test_image_generate_blur(MockImage, filters, expected_filters):
         mock_img_instance, local_persist=False, filters=filters
     )
 
-    # If filter is None, use the same filter object sended
     if expected_filters["filter"]:
         mock_img_instance.filter.assert_called_once_with(expected_filters["filter"])
     else:
