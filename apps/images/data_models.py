@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Type
 
 from apps.images.constants import ImageTransformations
-from apps.images.processing.abstract_classes import ImageTransformationCallable
+from apps.images.processing.transformations import ImageTransformationCallable
 
 
 @dataclass

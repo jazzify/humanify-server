@@ -1,11 +1,37 @@
 import inspect
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 from PIL import Image, ImageFilter
 
 from apps.images.processing import transformations as image_transformations
-from apps.images.processing.abstract_classes import ImageTransformationCallable
+
+
+def test_image_transformation_callable_not_implemented():
+    mock_img_instance = MagicMock()
+    file_name = "thumbnail.png"
+
+    class TestNewTransformation(image_transformations.ImageTransformationCallable):
+        pass
+
+    with pytest.raises(TypeError):
+        TestNewTransformation(mock_img_instance, file_name)
+
+
+def test_image_transformation_init():
+    mock_img_instance = MagicMock()
+    relative_path = "test/"
+
+    class TestNewTransformation(image_transformations.ImageTransformationCallable):
+        def _image_transform(
+            self, image: Image.Image, filters: dict[str, Any]
+        ) -> Image.Image:
+            return image(**filters)
+
+    transformation = TestNewTransformation(mock_img_instance, filters={})
+
+    transformation.image_transformed.save.assert_not_called()
 
 
 def test_image_tranformation_implementation():
@@ -15,7 +41,9 @@ def test_image_tranformation_implementation():
             assert inspect.isclass(cls_obj)
             assert not inspect.ismethod(cls_obj)
             assert not inspect.ismethodwrapper(cls_obj)
-            assert issubclass(cls_obj, ImageTransformationCallable)
+            assert issubclass(
+                cls_obj, image_transformations.ImageTransformationCallable
+            )
 
 
 @pytest.mark.parametrize(

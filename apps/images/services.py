@@ -15,8 +15,8 @@ from apps.images.data_models import (
     ImageTransformationCallableDataClass,
     ImageTransformationDataClass,
 )
-from apps.images.processing.abstract_classes import ImageTransformationCallable
 from apps.images.processing.transformations import (
+    ImageTransformationCallable,
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
