@@ -5,14 +5,16 @@ from typing import Callable
 from PIL import Image as PImage
 
 from apps.images.processing.data_models import (
-    ImageTransformationDataClass,
+    ImageProcessingTransformationDataClass,
     ImageTransformedDataClass,
 )
 from apps.images.processing.transformations import ImageTransformationCallable
 
 
 class BaseImageTransformer(ABC):
-    def __init__(self, transformations: list[ImageTransformationDataClass]) -> None:
+    def __init__(
+        self, transformations: list[ImageProcessingTransformationDataClass]
+    ) -> None:
         self.transformations_data = transformations
 
     @abstractmethod
@@ -20,7 +22,9 @@ class BaseImageTransformer(ABC):
 
 
 class ImageMultiProcessTransformer(BaseImageTransformer):
-    def __init__(self, transformations: list[ImageTransformationDataClass]) -> None:
+    def __init__(
+        self, transformations: list[ImageProcessingTransformationDataClass]
+    ) -> None:
         super().__init__(transformations)
         self._transformations_applied: list[ImageTransformedDataClass] = []
 

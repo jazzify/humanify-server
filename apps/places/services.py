@@ -4,9 +4,9 @@ from django.core.exceptions import ValidationError
 from django.core.files.images import ImageFile
 from django.db.models import QuerySet
 
-from apps.images.tasks import transform_uploaded_images
 from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
+from apps.places.tasks import transform_uploaded_images
 from apps.users.models import BaseUser
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ def place_create(
     latitude: float,
     longitude: float,
     tag_names: list[str] | None = None,
-    favorite: bool | None = False,
+    favorite: bool = False,
     description: str | None = None,
 ) -> Place:
     place: Place = Place.objects.create(
@@ -94,7 +94,6 @@ def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceIma
             )
 
         created_place_images = []
-
         for image in images:
             place_image = PlaceImage(place_id=place_id, image=image)
             place_image.full_clean

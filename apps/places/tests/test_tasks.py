@@ -1,18 +1,18 @@
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
 from apps.images.constants import ImageTransformations
 from apps.images.data_models import ImageTransformationDataClass
-from apps.images.tasks import transform_uploaded_images
+from apps.places.tasks import transform_uploaded_images
 
 
 @patch("PIL.ImageFilter.BoxBlur")
 @patch("PIL.ImageFilter.GaussianBlur")
-@patch("apps.images.services.ImageTransformationService")
+@patch("apps.images.services.image_local_transform")
 @pytest.mark.django_db
 def test_transform_uploaded_images(
-    mock_image_service, mock_gaussian_blur, mock_box_blur
+    mock_image_local_transform, mock_gaussian_blur, mock_box_blur
 ):
     file_path = "path/to/file.jpg"
     root_folder = "root_folder"
@@ -20,23 +20,31 @@ def test_transform_uploaded_images(
 
     transform_uploaded_images.enqueue(file_path, root_folder, parent_folder)
 
-    mock_image_service.assert_called_once_with(
+    mock_image_local_transform.assert_called_once_with(
         image_path=file_path,
-        root_folder=root_folder,
         parent_folder=parent_folder,
         transformations=[
             ImageTransformationDataClass(
-                name=ImageTransformations.THUMBNAIL,
+                identifier=ANY,
+                transformation=ImageTransformations.THUMBNAIL,
                 filters={"size": (64, 64)},
             ),
-            ImageTransformationDataClass(name=ImageTransformations.THUMBNAIL),
             ImageTransformationDataClass(
-                name=ImageTransformations.THUMBNAIL,
+                identifier=ANY,
+                transformation=ImageTransformations.THUMBNAIL,
+            ),
+            ImageTransformationDataClass(
+                identifier=ANY,
+                transformation=ImageTransformations.THUMBNAIL,
                 filters={"size": (320, 320)},
             ),
-            ImageTransformationDataClass(name=ImageTransformations.BLACK_AND_WHITE),
             ImageTransformationDataClass(
-                name=ImageTransformations.BLACK_AND_WHITE,
+                identifier=ANY,
+                transformation=ImageTransformations.BLACK_AND_WHITE,
+            ),
+            ImageTransformationDataClass(
+                identifier=ANY,
+                transformation=ImageTransformations.BLACK_AND_WHITE,
                 filters={
                     "matrix": (
                         0.312453,
@@ -55,12 +63,14 @@ def test_transform_uploaded_images(
                 },
             ),
             ImageTransformationDataClass(
-                name=ImageTransformations.BLUR,
+                identifier=ANY,
+                transformation=ImageTransformations.BLUR,
                 filters={"filter": mock_gaussian_blur(48)},
             ),
             ImageTransformationDataClass(
-                name=ImageTransformations.BLUR, filters={"filter": mock_box_blur(48)}
+                identifier=ANY,
+                transformation=ImageTransformations.BLUR,
+                filters={"filter": mock_box_blur(48)},
             ),
         ],
     )
-    mock_image_service.return_value.apply_transformations.assert_called_once()

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, call, patch
 
-from apps.images.processing.data_models import ImageTransformationDataClass
+from apps.images.processing.data_models import ImageProcessingTransformationDataClass
 from apps.images.processing.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
@@ -12,24 +12,24 @@ from apps.images.processing.transformers import (
 )
 
 
-@patch("apps.images.services.cfutures.ProcessPoolExecutor")
+@patch("apps.images.processing.transformers.cfutures.ProcessPoolExecutor")
 def test_image_multiprocess_transformer(mock_executor):
     mock_image = MagicMock()
     mock_image_copy = MagicMock()
     mock_image.copy.return_value = mock_image_copy
 
     transformations = [
-        ImageTransformationDataClass(
+        ImageProcessingTransformationDataClass(
             identifier="THUMBNAIL",
             transformation=TransformationThumbnail,
             filters={"size": (64, 64)},
         ),
-        ImageTransformationDataClass(
+        ImageProcessingTransformationDataClass(
             identifier="BLUR",
             transformation=TransformationBlur,
             filters={"size": (64, 64)},
         ),
-        ImageTransformationDataClass(
+        ImageProcessingTransformationDataClass(
             identifier="BLACK_AND_WHITE",
             transformation=TransformationBlackAndWhite,
             filters={"size": (64, 64)},
@@ -79,13 +79,15 @@ def test_image_sequential_transformer():
     thumbnail_size = {"size": (64, 64)}
 
     transformations = [
-        ImageTransformationDataClass(
+        ImageProcessingTransformationDataClass(
             identifier="THUMBNAIL",
             transformation=mock_thumbnail_t,
             filters=thumbnail_size,
         ),
-        ImageTransformationDataClass(identifier="BLUR", transformation=mock_blur_t),
-        ImageTransformationDataClass(
+        ImageProcessingTransformationDataClass(
+            identifier="BLUR", transformation=mock_blur_t
+        ),
+        ImageProcessingTransformationDataClass(
             identifier="BLACK_AND_WHITE", transformation=mock_bnw_t
         ),
     ]

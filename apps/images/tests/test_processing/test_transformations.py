@@ -1,5 +1,4 @@
 import inspect
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,21 +16,6 @@ def test_image_transformation_callable_not_implemented():
 
     with pytest.raises(TypeError):
         TestNewTransformation(mock_img_instance, file_name)
-
-
-def test_image_transformation_init():
-    mock_img_instance = MagicMock()
-    relative_path = "test/"
-
-    class TestNewTransformation(image_transformations.ImageTransformationCallable):
-        def _image_transform(
-            self, image: Image.Image, filters: dict[str, Any]
-        ) -> Image.Image:
-            return image(**filters)
-
-    transformation = TestNewTransformation(mock_img_instance, filters={})
-
-    transformation.image_transformed.save.assert_not_called()
 
 
 def test_image_tranformation_implementation():

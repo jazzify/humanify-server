@@ -7,7 +7,7 @@ from apps.images.processing.transformations import ImageTransformationCallable
 
 
 @dataclass
-class ImageTransformationDataClass:
+class ImageProcessingTransformationDataClass:
     identifier: str
     transformation: Type[ImageTransformationCallable]
     filters: dict[str, Any] = field(default_factory=lambda: {})

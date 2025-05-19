@@ -6,7 +6,7 @@ from PIL import Image as PImage
 from PIL import ImageFilter
 
 from apps.images.processing.data_models import (
-    ImageTransformationDataClass,
+    ImageProcessingTransformationDataClass,
     ImageTransformedDataClass,
 )
 from apps.images.processing.transformations import TransformationBlur
@@ -25,7 +25,7 @@ def temp_image_file():
 @pytest.fixture
 def blur_transformation_instance():
     """Returns an instance of ImageTransformationDataClass for blur."""
-    return ImageTransformationDataClass(
+    return ImageProcessingTransformationDataClass(
         identifier="blur_test_id",
         transformation=TransformationBlur,
         filters={"filter": ImageFilter.GaussianBlur(1)},
