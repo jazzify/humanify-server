@@ -31,3 +31,6 @@ dev = [
 
 [tool.setuptools]
 packages = ["apps", "humanify_project"]
+
+[tool.pytest.ini_options]
+cache_dir = "/home/appuser/.cache/pytest_cache"
