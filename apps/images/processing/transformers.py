@@ -7,8 +7,8 @@ from PIL import Image as PImage
 from apps.images.processing.data_models import (
     ImageProcessingTransformationDataClass,
     ImageTransformedDataClass,
+    InternalImageTransformation,
 )
-from apps.images.processing.transformations import ImageTransformationCallable
 
 
 class BaseImageTransformer(ABC):
@@ -30,8 +30,8 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
 
     def _callback_process(
         self, identifier: str
-    ) -> Callable[[cfutures.Future[ImageTransformationCallable]], None]:
-        def callback(future: cfutures.Future[ImageTransformationCallable]) -> None:
+    ) -> Callable[[cfutures.Future[InternalImageTransformation]], None]:
+        def callback(future: cfutures.Future[InternalImageTransformation]) -> None:
             self._transformations_applied.append(
                 ImageTransformedDataClass(
                     identifier=identifier, image=future.result().image_transformed
@@ -44,7 +44,7 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
         with cfutures.ProcessPoolExecutor() as executor:
             for transform_data in self.transformations_data:
                 image_copy = image.copy()
-                future: cfutures.Future[ImageTransformationCallable] = executor.submit(
+                future: cfutures.Future[InternalImageTransformation] = executor.submit(
                     transform_data.transformation,
                     image_copy,
                     transform_data.filters,

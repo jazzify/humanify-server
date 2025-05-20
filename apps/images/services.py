@@ -2,7 +2,10 @@ import logging
 
 from apps.images.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
 from apps.images.data_models import ImageTransformationDataClass
-from apps.images.processing.data_models import ImageProcessingTransformationDataClass
+from apps.images.processing.data_models import (
+    ImageProcessingTransformationDataClass,
+    InternalTransformationManagerSave,
+)
 from apps.images.processing.managers import ImageLocalManager
 from apps.images.processing.transformers import (
     BaseImageTransformer,
@@ -26,7 +29,7 @@ def image_local_transform(
     image_path: str,
     transformations: list[ImageTransformationDataClass],
     parent_folder: str,
-) -> dict[str, str]:
+) -> list[InternalTransformationManagerSave]:
     transformations_data = get_transformation_dataclasses(transformations)
     transformer = get_local_transformer(transformations=transformations_data)
     image_manager = ImageLocalManager(image_path, transformer=transformer)

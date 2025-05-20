@@ -1,19 +1,101 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Type
+from typing import Any, Literal, Type
 
 from PIL import Image as PImage
-
-from apps.images.processing.transformations import ImageTransformationCallable
+from PIL import ImageFilter
 
 
 @dataclass
+class InternalTransformationFilters(ABC): ...
+
+
+class InternalImageTransformation(ABC):
+    """
+    Abstract class that applies Subclass transformation at subclass
+    instantiation to the image provided with the filters provided
+
+    The transformed image is stored as an instance variable and can
+    be accessed with the `image_transformed` attribute.
+
+    Args:
+        image (PImage.Image): The PIL image that will undergo the transformation.
+        filters (TransformationFilter): A TransformationFilter instance with the
+        filters that will be applied to the image. The filters are specific to
+        the concrete implementation of the transformation.
+    """
+
+    def __init__(
+        self,
+        image: PImage.Image,
+        filters: InternalTransformationFilters,
+    ) -> None:
+        self.image_transformed = self._image_transform(image=image, filters=filters)
+
+    @abstractmethod
+    def _image_transform(
+        self,
+        image: PImage.Image,
+        filters: Any,  # Each subclass will have its own filters
+    ) -> PImage.Image:
+        """
+        Abstract method that should be implemented by the concrete
+        transformation.
+
+        This method takes a PIL image and applies the transformation
+        specified by the filters to the image.
+
+        Args:
+            image (PImage.Image): The PIL image that will undergo the
+                transformation.
+            filters (dict[str, Any]): A dictionary with the filters
+                that will be applied to the image.
+
+        Returns:
+            PImage.Image: A new PIL image with the applied filters.
+        """
+
+
+@dataclass
+class InternalTransformationFiltersThumbnail(InternalTransformationFilters):
+    size: tuple[float, float]
+    resample: PImage.Resampling
+    reducing_gap: float | None
+
+
+@dataclass
+class InternalTransformationFiltersBlur(InternalTransformationFilters):
+    filter: ImageFilter.MultibandFilter
+
+
+@dataclass
+class InternalTransformationFiltersBlackAndWhite(InternalTransformationFilters):
+    mode: Literal["1"] = field(init=False, default="1")
+    dither: PImage.Dither | None
+
+
+# TODO: Rename to follow file convention
+@dataclass
 class ImageProcessingTransformationDataClass:
     identifier: str
-    transformation: Type[ImageTransformationCallable]
-    filters: dict[str, Any] = field(default_factory=lambda: {})
+    transformation: Type[InternalImageTransformation]
+    filters: InternalTransformationFilters
 
 
+# TODO: Rename to follow file convention
 @dataclass
 class ImageTransformedDataClass:
     identifier: str
     image: PImage.Image
+
+
+@dataclass
+class InternalTransformationManagerSave:
+    identifier: str
+    path: str
+
+
+@dataclass
+class InternalTransformationMapper:
+    transformation: Type[InternalImageTransformation]
+    filters: InternalTransformationFilters
