@@ -7,7 +7,7 @@ from apps.images.data_models import ImageTransformationDataClass
 from apps.images.processing import utils
 from apps.images.processing.data_models import ImageProcessingTransformationDataClass
 from apps.images.processing.transformations import (
-    ImageTransformationCallable,
+    InternalImageTransformation,
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
@@ -25,7 +25,7 @@ from apps.images.processing.transformations import (
 def test_get_transformation_callable(transformation, expected_callable):
     callable_class = utils.get_transformation_callable(transformation)
     assert callable_class == expected_callable
-    assert issubclass(callable_class, ImageTransformationCallable)
+    assert issubclass(callable_class, InternalImageTransformation)
 
 
 def test_get_transformation_callable_invalid():

@@ -9,63 +9,82 @@ logger = logging.getLogger(__name__)
 def transform_uploaded_images(
     file_path: str, root_folder: str, parent_folder: str
 ) -> None:
-    import uuid
-
-    from PIL import ImageFilter
-
-    from apps.images.constants import ImageTransformations
-    from apps.images.data_models import ImageTransformationDataClass
+    from apps.images.constants import (
+        ImageTransformations,
+        TransformationFilterBlurFilter,
+        TransformationFilterDither,
+        TransformationFilterThumbnailResampling,
+    )
+    from apps.images.data_models import (
+        ImageTransformationDataClass,
+        TransformationFiltersBlackAndWhite,
+        TransformationFiltersBlur,
+        TransformationFiltersThumbnail,
+    )
     from apps.images.services import image_local_transform
 
     logger.info(f"Transforming image {file_path}")
     transformations = [
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
-            transformation=ImageTransformations.THUMBNAIL,
-            filters={"size": (64, 64)},
-        ),
-        ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
+            identifier="THUMBNAIL/default",
             transformation=ImageTransformations.THUMBNAIL,
         ),
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
+            identifier="THUMBNAIL/size_64",
             transformation=ImageTransformations.THUMBNAIL,
-            filters={"size": (320, 320)},
+            filters=TransformationFiltersThumbnail(size=(64, 64)),
         ),
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
+            identifier="THUMBNAIL/s_320_gap_4",
+            transformation=ImageTransformations.THUMBNAIL,
+            filters=TransformationFiltersThumbnail(size=(320, 320), reducing_gap=4),
+        ),
+        ImageTransformationDataClass(
+            identifier="THUMBNAIL/s_320_gap_8_lanczos",
+            transformation=ImageTransformations.THUMBNAIL,
+            filters=TransformationFiltersThumbnail(
+                size=(320, 320),
+                reducing_gap=8,
+                resample=TransformationFilterThumbnailResampling.LANCZOS,
+            ),
+        ),
+        ImageTransformationDataClass(
+            identifier="BNW/default",
             transformation=ImageTransformations.BLACK_AND_WHITE,
         ),
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
+            identifier="BNW/floydsteinberg",
             transformation=ImageTransformations.BLACK_AND_WHITE,
-            filters={
-                "matrix": (
-                    0.312453,
-                    0.957580,
-                    0.980423,
-                    0,
-                    0.112671,
-                    0.915160,
-                    0.972169,
-                    0,
-                    0.319334,
-                    0.919193,
-                    0.950227,
-                    0,
-                )
-            },
+            filters=TransformationFiltersBlackAndWhite(
+                dither=TransformationFilterDither.FLOYDSTEINBERG
+            ),
         ),
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
-            transformation=ImageTransformations.BLUR,
-            filters={"filter": ImageFilter.GaussianBlur(48)},
+            identifier="BNW/none",
+            transformation=ImageTransformations.BLACK_AND_WHITE,
+            filters=TransformationFiltersBlackAndWhite(
+                dither=TransformationFilterDither.NONE
+            ),
         ),
         ImageTransformationDataClass(
-            identifier=f"{uuid.uuid4()}",
+            identifier="BLUR/default",
             transformation=ImageTransformations.BLUR,
-            filters={"filter": ImageFilter.BoxBlur(48)},
+        ),
+        ImageTransformationDataClass(
+            identifier="BLUR/gaussian_86",
+            transformation=ImageTransformations.BLUR,
+            filters=TransformationFiltersBlur(
+                filter=TransformationFilterBlurFilter.GAUSSIAN_BLUR,
+                radius=86,
+            ),
+        ),
+        ImageTransformationDataClass(
+            identifier="BLUR/box_48",
+            transformation=ImageTransformations.BLUR,
+            filters=TransformationFiltersBlur(
+                filter=TransformationFilterBlurFilter.BOX_BLUR,
+                radius=48,
+            ),
         ),
     ]
     applied_transformations = image_local_transform(
@@ -74,5 +93,5 @@ def transform_uploaded_images(
         parent_folder=parent_folder,
     )
 
-    for identifier, final_path in applied_transformations.items():
-        logger.info(f"{identifier}: {final_path}")
+    for transformation in applied_transformations:
+        logger.info(f"{transformation.identifier}: {transformation.path}")

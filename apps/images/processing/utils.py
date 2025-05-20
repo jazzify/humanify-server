@@ -1,36 +1,71 @@
+from dataclasses import asdict
+
 from apps.images.constants import ImageTransformations
-from apps.images.data_models import ImageTransformationDataClass
-from apps.images.processing.data_models import ImageProcessingTransformationDataClass
+from apps.images.data_models import (
+    ImageTransformationDataClass,
+    TransformationFilters,
+    TransformationFiltersBlackAndWhite,
+    TransformationFiltersBlur,
+    TransformationFiltersThumbnail,
+)
+from apps.images.processing.data_models import (
+    ImageProcessingTransformationDataClass,
+    InternalTransformationMapper,
+)
 from apps.images.processing.transformations import (
-    ImageTransformationCallable,
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
 )
 
 
+def transformations_mapper(
+    transformation: ImageTransformations,
+    filters: TransformationFilters | None = None,
+) -> InternalTransformationMapper:
+    dict_filters = {}
+    if filters:
+        dict_filters = asdict(filters)
+    else:
+        dict_filters = {}
+
+    _mapper = {
+        ImageTransformations.THUMBNAIL: {
+            "transformation": TransformationThumbnail,
+            "filters": TransformationFiltersThumbnail,
+        },
+        ImageTransformations.BLUR: {
+            "transformation": TransformationBlur,
+            "filters": TransformationFiltersBlur,
+        },
+        ImageTransformations.BLACK_AND_WHITE: {
+            "transformation": TransformationBlackAndWhite,
+            "filters": TransformationFiltersBlackAndWhite,
+        },
+    }
+
+    transformation_map = _mapper[transformation]
+    return InternalTransformationMapper(
+        transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
+        filters=transformation_map["filters"](**dict_filters).to_internal(),
+    )
+
+
 def get_transformation_dataclasses(
     transformations: list[ImageTransformationDataClass],
 ) -> list[ImageProcessingTransformationDataClass]:
     dataclasses = []
-    for transformation in transformations:
+    for transform in transformations:
+        mapper = transformations_mapper(
+            transformation=transform.transformation, filters=transform.filters
+        )
         dataclasses.append(
             ImageProcessingTransformationDataClass(
-                identifier=transformation.identifier,
-                transformation=get_transformation_callable(
-                    transformation.transformation
-                ),
-                filters=transformation.filters,
+                identifier=transform.identifier,
+                transformation=transformations_mapper(
+                    transform.transformation
+                ).transformation,
+                filters=mapper.filters,
             )
         )
     return dataclasses
-
-
-def get_transformation_callable(
-    transformation: ImageTransformations,
-) -> type[ImageTransformationCallable]:
-    return {
-        ImageTransformations.THUMBNAIL: TransformationThumbnail,
-        ImageTransformations.BLUR: TransformationBlur,
-        ImageTransformations.BLACK_AND_WHITE: TransformationBlackAndWhite,
-    }[transformation]
