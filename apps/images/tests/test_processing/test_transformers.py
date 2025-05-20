@@ -85,10 +85,10 @@ def test_image_sequential_transformer():
             filters=thumbnail_size,
         ),
         ImageProcessingTransformationDataClass(
-            identifier="BLUR", transformation=mock_blur_t
+            identifier="BLUR", transformation=mock_blur_t, filters={}
         ),
         ImageProcessingTransformationDataClass(
-            identifier="BLACK_AND_WHITE", transformation=mock_bnw_t
+            identifier="BLACK_AND_WHITE", transformation=mock_bnw_t, filters={}
         ),
     ]
     transformer = ImageSequentialTransformer(transformations=transformations)

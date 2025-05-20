@@ -1,13 +1,17 @@
-from unittest.mock import MagicMock, patch
-
 import pytest
+from PIL import Image as PImage
+from PIL import ImageFilter
 
 from apps.images.constants import ImageTransformations
 from apps.images.data_models import ImageTransformationDataClass
 from apps.images.processing import utils
-from apps.images.processing.data_models import ImageProcessingTransformationDataClass
+from apps.images.processing.data_models import (
+    InternalTransformationFiltersBlackAndWhite,
+    InternalTransformationFiltersBlur,
+    InternalTransformationFiltersThumbnail,
+    InternalTransformationMapper,
+)
 from apps.images.processing.transformations import (
-    InternalImageTransformation,
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
@@ -17,51 +21,46 @@ from apps.images.processing.transformations import (
 @pytest.mark.parametrize(
     "transformation, expected_callable",
     [
-        (ImageTransformations.THUMBNAIL, TransformationThumbnail),
-        (ImageTransformations.BLUR, TransformationBlur),
-        (ImageTransformations.BLACK_AND_WHITE, TransformationBlackAndWhite),
+        (
+            ImageTransformations.THUMBNAIL,
+            InternalTransformationMapper(
+                transformation=TransformationThumbnail,
+                filters=InternalTransformationFiltersThumbnail(
+                    size=(128, 128), resample=PImage.Resampling.BICUBIC, reducing_gap=2
+                ),
+            ),
+        ),
+        (
+            ImageTransformations.BLUR,
+            InternalTransformationMapper(
+                transformation=TransformationBlur,
+                filters=InternalTransformationFiltersBlur(filter=ImageFilter.BLUR()),
+            ),
+        ),
+        (
+            ImageTransformations.BLACK_AND_WHITE,
+            InternalTransformationMapper(
+                transformation=TransformationBlackAndWhite,
+                filters=InternalTransformationFiltersBlackAndWhite(
+                    dither=PImage.Dither.FLOYDSTEINBERG
+                ),
+            ),
+        ),
     ],
 )
-def test_get_transformation_callable(transformation, expected_callable):
-    callable_class = utils.get_transformation_callable(transformation)
-    assert callable_class == expected_callable
-    assert issubclass(callable_class, InternalImageTransformation)
+def test_transformations_mapper(transformation, expected_callable):
+    mapper = utils.transformations_mapper(transformation)
+
+    if transformation == ImageTransformations.BLUR:
+        assert mapper.transformation == expected_callable.transformation
+        assert isinstance(mapper.filters, expected_callable.filters.__class__)
+    else:
+        assert mapper == expected_callable
 
 
-def test_get_transformation_callable_invalid():
+def test_transformations_mapper_invalid():
     with pytest.raises(KeyError):
-        utils.get_transformation_callable("INVALID_TRANSFORMATION")
-
-
-def test_get_transformation_dataclasses():
-    mock_transformation_data = [
-        ImageTransformationDataClass(
-            identifier="thumb1",
-            transformation=ImageTransformations.THUMBNAIL,
-            filters={"size": (50, 50)},
-        ),
-        ImageTransformationDataClass(
-            identifier="blur1",
-            transformation=ImageTransformations.BLUR,
-            filters={"radius": 2},
-        ),
-    ]
-
-    result_dataclasses = utils.get_transformation_dataclasses(mock_transformation_data)
-
-    assert len(result_dataclasses) == 2
-
-    # Check first dataclass
-    assert isinstance(result_dataclasses[0], ImageProcessingTransformationDataClass)
-    assert result_dataclasses[0].identifier == "thumb1"
-    assert result_dataclasses[0].transformation == TransformationThumbnail
-    assert result_dataclasses[0].filters == {"size": (50, 50)}
-
-    # Check second dataclass
-    assert isinstance(result_dataclasses[1], ImageProcessingTransformationDataClass)
-    assert result_dataclasses[1].identifier == "blur1"
-    assert result_dataclasses[1].transformation == TransformationBlur
-    assert result_dataclasses[1].filters == {"radius": 2}
+        utils.transformations_mapper("INVALID_TRANSFORMATION")
 
 
 def test_get_transformation_dataclasses_empty():
@@ -69,21 +68,19 @@ def test_get_transformation_dataclasses_empty():
     assert result_dataclasses == []
 
 
-@patch("apps.images.processing.utils.get_transformation_callable")
-def test_get_transformation_dataclasses_callable_mock(mock_get_callable):
-    mock_callable_instance = MagicMock()
-    mock_get_callable.return_value = mock_callable_instance
-
+def test_get_transformation_dataclasses_callable_mock():
     mock_transformation_data = [
         ImageTransformationDataClass(
             identifier="test1",
             transformation=ImageTransformations.THUMBNAIL,
-            filters={},
+            filters=None,
         )
     ]
 
     result_dataclasses = utils.get_transformation_dataclasses(mock_transformation_data)
 
-    mock_get_callable.assert_called_once_with(ImageTransformations.THUMBNAIL)
     assert len(result_dataclasses) == 1
-    assert result_dataclasses[0].transformation == mock_callable_instance
+    assert result_dataclasses[0].filters == InternalTransformationFiltersThumbnail(
+        size=(128, 128), resample=PImage.Resampling.BICUBIC, reducing_gap=2
+    )
+    assert result_dataclasses[0].identifier == "test1"

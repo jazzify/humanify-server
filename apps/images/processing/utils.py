@@ -62,9 +62,7 @@ def get_transformation_dataclasses(
         dataclasses.append(
             ImageProcessingTransformationDataClass(
                 identifier=transform.identifier,
-                transformation=transformations_mapper(
-                    transform.transformation
-                ).transformation,
+                transformation=mapper.transformation,
                 filters=mapper.filters,
             )
         )
