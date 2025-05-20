@@ -1,6 +1,7 @@
+import uuid
 from abc import ABC, abstractmethod
 from concurrent import futures as cfutures
-from typing import Callable
+from typing import Callable, Generator
 
 from PIL import Image as PImage
 
@@ -70,3 +71,40 @@ class ImageSequentialTransformer(BaseImageTransformer):
                 )
             )
         return transformations
+
+
+class ImageChainTransformer(BaseImageTransformer):
+    def _transform(
+        self,
+        image: PImage.Image,
+        transformations: list[ImageProcessingTransformationDataClass],
+    ) -> Generator[PImage.Image]:
+        if len(transformations) == 1:
+            yield (
+                transformations[0]
+                .transformation(
+                    image,
+                    transformations[0].filters,
+                )
+                .image_transformed
+            )
+
+        for transform_data in transformations:
+            _image = transform_data.transformation(
+                image,
+                transform_data.filters,
+            )
+            yield from self._transform(
+                _image.image_transformed, transformations=transformations[1:]
+            )
+
+    def transform(self, image: PImage.Image) -> list[ImageTransformedDataClass]:
+        identifier = uuid.uuid4()
+        transformed_image = next(
+            self._transform(image, list(reversed(self.transformations_data)))
+        )
+        return [
+            ImageTransformedDataClass(
+                identifier=str(identifier), image=transformed_image
+            )
+        ]
