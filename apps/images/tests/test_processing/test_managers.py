@@ -36,16 +36,14 @@ class TestImageLocalManager:
     def test_save_with_transformations(
         self, temp_image_file, mock_transformer_with_data, blur_transformation_instance
     ):
+        parent_folder_name = "test_save_parent"
         manager = ImageLocalManager(
             image_path=temp_image_file, transformer=mock_transformer_with_data
         )
         manager.apply_transformations()
-
-        parent_folder_name = "test_save_parent"
         saved_urls = manager.save(parent_folder=parent_folder_name)
 
-        assert len(saved_urls) == 1
-        assert blur_transformation_instance.identifier in saved_urls
+        transformation = saved_urls[0]
 
         expected_save_dir_base = (
             settings.MEDIA_ROOT
@@ -53,14 +51,14 @@ class TestImageLocalManager:
             / parent_folder_name
             / blur_transformation_instance.identifier
         )
+        saved_files_in_dir = list(expected_save_dir_base.glob("*.png"))
+
+        assert len(saved_urls) == 1
+        assert blur_transformation_instance.identifier == transformation.identifier
         assert expected_save_dir_base.exists()
         assert expected_save_dir_base.is_dir()
-
-        saved_files_in_dir = list(expected_save_dir_base.glob("*.png"))
         assert len(saved_files_in_dir) == 1
-        assert saved_urls[blur_transformation_instance.identifier] == str(
-            saved_files_in_dir[0]
-        )
+        assert transformation.path == str(saved_files_in_dir[0])
 
     def test_save_without_applied_transformations(self, temp_image_file, tmp_path):
         manager = ImageLocalManager(image_path=temp_image_file, transformer=None)

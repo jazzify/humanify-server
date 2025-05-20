@@ -5,6 +5,11 @@ import pytest
 from PIL import Image, ImageFilter
 
 from apps.images.processing import transformations as image_transformations
+from apps.images.processing.data_models import (
+    InternalTransformationFiltersBlackAndWhite,
+    InternalTransformationFiltersBlur,
+    InternalTransformationFiltersThumbnail,
+)
 
 
 def test_image_transformation_callable_not_implemented():
@@ -34,23 +39,19 @@ def test_image_tranformation_implementation():
     "filters, expected_filters",
     [
         (
-            {},
+            InternalTransformationFiltersThumbnail(
+                size=(420, 420), reducing_gap=None, resample=Image.Resampling.BICUBIC
+            ),
             {
-                "size": (128, 128),
+                "size": (420, 420),
                 "resample": Image.Resampling.BICUBIC,
-                "reducing_gap": 2,
+                "reducing_gap": None,
             },
         ),
         (
-            {"Bad": "Filter"},
-            {
-                "size": (128, 128),
-                "resample": Image.Resampling.BICUBIC,
-                "reducing_gap": 2,
-            },
-        ),
-        (
-            {"size": (64, 64), "resample": Image.Resampling.NEAREST, "reducing_gap": 3},
+            InternalTransformationFiltersThumbnail(
+                size=(64, 64), reducing_gap=3, resample=Image.Resampling.NEAREST
+            ),
             {"size": (64, 64), "resample": Image.Resampling.NEAREST, "reducing_gap": 3},
         ),
     ],
@@ -64,55 +65,44 @@ def test_image_generate_thumbnail(MockImage, filters, expected_filters):
 
 
 @pytest.mark.parametrize(
-    "filters, expected_filters",
+    "filters",
     [
-        ({}, {"filter": ImageFilter.BLUR}),
-        ({"Bad": "Filter"}, {"filter": ImageFilter.BLUR}),
-        ({"filter": ImageFilter.BoxBlur(5)}, {"filter": None}),
+        InternalTransformationFiltersBlur(filter=ImageFilter.BLUR),
+        InternalTransformationFiltersBlur(filter=ImageFilter.BoxBlur(5)),
+        InternalTransformationFiltersBlur(filter=ImageFilter.GaussianBlur(42)),
     ],
 )
 @patch("PIL.Image.Image")
-def test_image_generate_blur(MockImage, filters, expected_filters):
+def test_image_generate_blur(MockImage, filters):
     mock_img_instance = MockImage()
     image_transformations.TransformationBlur(mock_img_instance, filters=filters)
-
-    if expected_filters["filter"]:
-        mock_img_instance.filter.assert_called_once_with(expected_filters["filter"])
-    else:
-        mock_img_instance.filter.assert_called_once_with(filters["filter"])
+    mock_img_instance.filter.assert_called_once_with(filters.filter)
 
 
 @pytest.mark.parametrize(
     "filters, expected_filters",
     [
         (
-            {},
+            InternalTransformationFiltersBlackAndWhite(
+                dither=Image.Dither.FLOYDSTEINBERG
+            ),
             {
-                "mode": "L",
-                "matrix": None,
-                "dither": None,
-                "palette": Image.Palette.ADAPTIVE,
-                "colors": 256,
-            },
-        ),
-        (
-            {"Bad": "Filter"},
-            {
-                "mode": "L",
-                "matrix": None,
-                "dither": None,
-                "palette": Image.Palette.ADAPTIVE,
-                "colors": 256,
-            },
-        ),
-        (
-            {"dither": Image.Dither.FLOYDSTEINBERG},
-            {
-                "mode": "L",
-                "matrix": None,
+                "mode": "1",
                 "dither": Image.Dither.FLOYDSTEINBERG,
-                "palette": Image.Palette.ADAPTIVE,
-                "colors": 256,
+            },
+        ),
+        (
+            InternalTransformationFiltersBlackAndWhite(dither=Image.Dither.NONE),
+            {
+                "mode": "1",
+                "dither": Image.Dither.NONE,
+            },
+        ),
+        (
+            InternalTransformationFiltersBlackAndWhite(dither=None),
+            {
+                "mode": "1",
+                "dither": None,
             },
         ),
     ],
