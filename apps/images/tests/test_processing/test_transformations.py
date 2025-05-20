@@ -11,7 +11,7 @@ def test_image_transformation_callable_not_implemented():
     mock_img_instance = MagicMock()
     file_name = "thumbnail.png"
 
-    class TestNewTransformation(image_transformations.ImageTransformationCallable):
+    class TestNewTransformation(image_transformations.InternalImageTransformation):
         pass
 
     with pytest.raises(TypeError):
@@ -26,7 +26,7 @@ def test_image_tranformation_implementation():
             assert not inspect.ismethod(cls_obj)
             assert not inspect.ismethodwrapper(cls_obj)
             assert issubclass(
-                cls_obj, image_transformations.ImageTransformationCallable
+                cls_obj, image_transformations.InternalImageTransformation
             )
 
 
