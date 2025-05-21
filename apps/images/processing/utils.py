@@ -2,14 +2,14 @@ from dataclasses import asdict
 
 from apps.images.constants import ImageTransformations
 from apps.images.data_models import (
-    ImageTransformationDataClass,
+    ImageTransformationDefinition,
     TransformationFilters,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
 )
 from apps.images.processing.data_models import (
-    ImageProcessingTransformationDataClass,
+    InternalImageTransformationDefinition,
     InternalTransformationMapper,
 )
 from apps.images.processing.transformations import (
@@ -52,15 +52,15 @@ def transformations_mapper(
 
 
 def get_transformation_dataclasses(
-    transformations: list[ImageTransformationDataClass],
-) -> list[ImageProcessingTransformationDataClass]:
+    transformations: list[ImageTransformationDefinition],
+) -> list[InternalImageTransformationDefinition]:
     dataclasses = []
     for transform in transformations:
         mapper = transformations_mapper(
             transformation=transform.transformation, filters=transform.filters
         )
         dataclasses.append(
-            ImageProcessingTransformationDataClass(
+            InternalImageTransformationDefinition(
                 identifier=transform.identifier,
                 transformation=mapper.transformation,
                 filters=mapper.filters,

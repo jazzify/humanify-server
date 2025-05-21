@@ -12,7 +12,7 @@ from apps.images.constants import (
     TransformationFilterThumbnailResampling,
 )
 from apps.images.processing.data_models import (
-    InternalTransformationFilters,
+    InternalImageTransformationFilters,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
@@ -22,7 +22,7 @@ from apps.images.processing.data_models import (
 @dataclass
 class TransformationFilters(ABC):
     @abstractmethod
-    def to_internal(self) -> InternalTransformationFilters: ...
+    def to_internal(self) -> InternalImageTransformationFilters: ...
 
 
 @dataclass
@@ -71,7 +71,7 @@ class TransformationFiltersBlackAndWhite(TransformationFilters):
 
 
 @dataclass
-class ImageTransformationDataClass:
+class ImageTransformationDefinition:
     identifier: str
     transformation: ImageTransformations
     filters: TransformationFilters | None = None

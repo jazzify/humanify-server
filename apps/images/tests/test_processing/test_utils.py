@@ -3,7 +3,7 @@ from PIL import Image as PImage
 from PIL import ImageFilter
 
 from apps.images.constants import ImageTransformations
-from apps.images.data_models import ImageTransformationDataClass
+from apps.images.data_models import ImageTransformationDefinition
 from apps.images.processing import utils
 from apps.images.processing.data_models import (
     InternalTransformationFiltersBlackAndWhite,
@@ -70,7 +70,7 @@ def test_get_transformation_dataclasses_empty():
 
 def test_get_transformation_dataclasses_callable_mock():
     mock_transformation_data = [
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="test1",
             transformation=ImageTransformations.THUMBNAIL,
             filters=None,

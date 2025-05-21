@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, call, patch
 
-from apps.images.processing.data_models import ImageProcessingTransformationDataClass
+from apps.images.processing.data_models import InternalImageTransformationDefinition
 from apps.images.processing.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
@@ -20,17 +20,17 @@ def test_image_multiprocess_transformer(mock_executor):
     mock_image.copy.return_value = mock_image_copy
 
     transformations = [
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="THUMBNAIL",
             transformation=TransformationThumbnail,
             filters={"size": (64, 64)},
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLUR",
             transformation=TransformationBlur,
             filters={"size": (64, 64)},
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLACK_AND_WHITE",
             transformation=TransformationBlackAndWhite,
             filters={"size": (64, 64)},
@@ -80,15 +80,15 @@ def test_image_sequential_transformer():
     thumbnail_size = {"size": (64, 64)}
 
     transformations = [
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="THUMBNAIL",
             transformation=mock_thumbnail_t,
             filters=thumbnail_size,
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLUR", transformation=mock_blur_t, filters={}
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLACK_AND_WHITE", transformation=mock_bnw_t, filters={}
         ),
     ]
@@ -112,15 +112,15 @@ def test_image_chain_transformer():
     thumbnail_size = {"size": (64, 64)}
 
     transformations = [
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="THUMBNAIL",
             transformation=mock_thumbnail_t,
             filters=thumbnail_size,
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLACK_AND_WHITE", transformation=mock_bnw_t, filters={}
         ),
-        ImageProcessingTransformationDataClass(
+        InternalImageTransformationDefinition(
             identifier="BLUR", transformation=mock_blur_t, filters={}
         ),
     ]
