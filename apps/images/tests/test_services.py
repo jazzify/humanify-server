@@ -63,7 +63,7 @@ def test_image_local_transform(
 
     mock_get_transformation_dataclasses.assert_called_once_with(transformations)
     mock_get_local_transformer.assert_called_once_with(
-        transformations=mock_get_transformation_dataclasses.return_value
+        transformations=mock_get_transformation_dataclasses.return_value, is_chain=False
     )
 
     mock_image_local_manager.assert_called_once_with(
