@@ -17,6 +17,7 @@ services:
   backend-humanify:
     build:
       context: .
+      target: development
     command: >
       sh -c "
         cd /code
