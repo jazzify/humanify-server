@@ -6,6 +6,7 @@ from PIL import Image, ImageFilter
 
 from apps.images.processing import transformations as image_transformations
 from apps.images.processing.data_models import (
+    InternalImageTransformation,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
@@ -16,7 +17,7 @@ def test_image_transformation_callable_not_implemented():
     mock_img_instance = MagicMock()
     file_name = "thumbnail.png"
 
-    class TestNewTransformation(image_transformations.InternalImageTransformation):
+    class TestNewTransformation(InternalImageTransformation):
         pass
 
     with pytest.raises(TypeError):
@@ -30,9 +31,7 @@ def test_image_tranformation_implementation():
             assert inspect.isclass(cls_obj)
             assert not inspect.ismethod(cls_obj)
             assert not inspect.ismethodwrapper(cls_obj)
-            assert issubclass(
-                cls_obj, image_transformations.InternalImageTransformation
-            )
+            assert issubclass(cls_obj, InternalImageTransformation)
 
 
 @pytest.mark.parametrize(

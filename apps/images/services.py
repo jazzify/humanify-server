@@ -2,10 +2,10 @@ import logging
 from typing import Type
 
 from apps.images.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
-from apps.images.data_models import ImageTransformationDataClass
+from apps.images.data_models import ImageTransformationDefinition
 from apps.images.processing.data_models import (
-    ImageProcessingTransformationDataClass,
-    InternalTransformationManagerSave,
+    InternalImageTransformationDefinition,
+    InternalTransformationManagerSaveResult,
 )
 from apps.images.processing.managers import ImageLocalManager
 from apps.images.processing.transformers import (
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_local_transformer(
-    transformations: list[ImageProcessingTransformationDataClass],
+    transformations: list[InternalImageTransformationDefinition],
     is_chain: bool = False,
 ) -> BaseImageTransformer:
     transformer: Type[BaseImageTransformer] = ImageSequentialTransformer
@@ -34,10 +34,10 @@ def get_local_transformer(
 
 def image_local_transform(
     image_path: str,
-    transformations: list[ImageTransformationDataClass],
+    transformations: list[ImageTransformationDefinition],
     parent_folder: str,
     is_chain: bool = False,
-) -> list[InternalTransformationManagerSave]:
+) -> list[InternalTransformationManagerSaveResult]:
     transformations_data = get_transformation_dataclasses(transformations)
     transformer = get_local_transformer(
         transformations=transformations_data, is_chain=is_chain

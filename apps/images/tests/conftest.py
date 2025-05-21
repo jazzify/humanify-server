@@ -6,8 +6,8 @@ from PIL import Image as PImage
 from PIL import ImageFilter
 
 from apps.images.processing.data_models import (
-    ImageProcessingTransformationDataClass,
-    ImageTransformedDataClass,
+    InternalImageTransformationDefinition,
+    InternalImageTransformationResult,
 )
 from apps.images.processing.transformations import TransformationBlur
 from apps.images.processing.transformers import BaseImageTransformer
@@ -24,8 +24,8 @@ def temp_image_file():
 
 @pytest.fixture
 def blur_transformation_instance():
-    """Returns an instance of ImageTransformationDataClass for blur."""
-    return ImageProcessingTransformationDataClass(
+    """Returns an instance of ImageTransformationDefinition for blur."""
+    return InternalImageTransformationDefinition(
         identifier="blur_test_id",
         transformation=TransformationBlur,
         filters={"filter": ImageFilter.GaussianBlur(1)},
@@ -38,7 +38,7 @@ def mock_transformer_with_data(blur_transformation_instance):
     transformer = MagicMock(spec=BaseImageTransformer)
     dummy_transformed_image = PImage.new("RGB", (60, 30), color="blue")
     transformed_data = [
-        ImageTransformedDataClass(
+        InternalImageTransformationResult(
             identifier=blur_transformation_instance.identifier,
             image=dummy_transformed_image,
         )

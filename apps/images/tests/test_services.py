@@ -6,8 +6,8 @@ from apps.images.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
 )
-from apps.images.data_models import ImageTransformationDataClass
-from apps.images.processing.data_models import ImageProcessingTransformationDataClass
+from apps.images.data_models import ImageTransformationDefinition
+from apps.images.processing.data_models import InternalImageTransformationDefinition
 from apps.images.processing.transformers import (
     ImageMultiProcessTransformer,
     ImageSequentialTransformer,
@@ -49,7 +49,7 @@ def test_image_local_transform(
 ):
     image_path = "/fake/image.jpg"
     transformations = [
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="test_thumb",
             transformation=ImageTransformations.THUMBNAIL,
             filters={"size": (100, 100)},
@@ -89,7 +89,7 @@ def test_get_local_transformer(
     num_transformations: int, expected_transformer_type: type
 ):
     mock_transformations = [
-        MagicMock(spec=ImageProcessingTransformationDataClass)
+        MagicMock(spec=InternalImageTransformationDefinition)
         for _ in range(num_transformations)
     ]
 

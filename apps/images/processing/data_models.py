@@ -7,7 +7,7 @@ from PIL import ImageFilter
 
 
 @dataclass
-class InternalTransformationFilters(ABC): ...
+class InternalImageTransformationFilters(ABC): ...
 
 
 class InternalImageTransformation(ABC):
@@ -28,7 +28,7 @@ class InternalImageTransformation(ABC):
     def __init__(
         self,
         image: PImage.Image,
-        filters: InternalTransformationFilters,
+        filters: InternalImageTransformationFilters,
     ) -> None:
         self.image_transformed = self._image_transform(image=image, filters=filters)
 
@@ -57,40 +57,38 @@ class InternalImageTransformation(ABC):
 
 
 @dataclass
-class InternalTransformationFiltersThumbnail(InternalTransformationFilters):
+class InternalTransformationFiltersThumbnail(InternalImageTransformationFilters):
     size: tuple[float, float]
     resample: PImage.Resampling
     reducing_gap: float | None
 
 
 @dataclass
-class InternalTransformationFiltersBlur(InternalTransformationFilters):
+class InternalTransformationFiltersBlur(InternalImageTransformationFilters):
     filter: ImageFilter.MultibandFilter
 
 
 @dataclass
-class InternalTransformationFiltersBlackAndWhite(InternalTransformationFilters):
+class InternalTransformationFiltersBlackAndWhite(InternalImageTransformationFilters):
     mode: Literal["1"] = field(init=False, default="1")
     dither: PImage.Dither | None
 
 
-# TODO: Rename to follow file convention
 @dataclass
-class ImageProcessingTransformationDataClass:
+class InternalImageTransformationDefinition:
     identifier: str
     transformation: Type[InternalImageTransformation]
-    filters: InternalTransformationFilters
+    filters: InternalImageTransformationFilters
 
 
-# TODO: Rename to follow file convention
 @dataclass
-class ImageTransformedDataClass:
+class InternalImageTransformationResult:
     identifier: str
     image: PImage.Image
 
 
 @dataclass
-class InternalTransformationManagerSave:
+class InternalTransformationManagerSaveResult:
     identifier: str
     path: str
 
@@ -98,4 +96,4 @@ class InternalTransformationManagerSave:
 @dataclass
 class InternalTransformationMapper:
     transformation: Type[InternalImageTransformation]
-    filters: InternalTransformationFilters
+    filters: InternalImageTransformationFilters
