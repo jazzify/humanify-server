@@ -16,7 +16,7 @@ def transform_uploaded_images(
         TransformationFilterThumbnailResampling,
     )
     from apps.images.data_models import (
-        ImageTransformationDataClass,
+        ImageTransformationDefinition,
         TransformationFiltersBlackAndWhite,
         TransformationFiltersBlur,
         TransformationFiltersThumbnail,
@@ -25,21 +25,21 @@ def transform_uploaded_images(
 
     logger.info(f"Transforming image {file_path}")
     transformations = [
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="THUMBNAIL/default",
             transformation=ImageTransformations.THUMBNAIL,
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="THUMBNAIL/size_64",
             transformation=ImageTransformations.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(64, 64)),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="THUMBNAIL/s_320_gap_4",
             transformation=ImageTransformations.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(320, 320), reducing_gap=4),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="THUMBNAIL/s_320_gap_8_lanczos",
             transformation=ImageTransformations.THUMBNAIL,
             filters=TransformationFiltersThumbnail(
@@ -48,29 +48,29 @@ def transform_uploaded_images(
                 resample=TransformationFilterThumbnailResampling.LANCZOS,
             ),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BNW/default",
             transformation=ImageTransformations.BLACK_AND_WHITE,
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BNW/floydsteinberg",
             transformation=ImageTransformations.BLACK_AND_WHITE,
             filters=TransformationFiltersBlackAndWhite(
                 dither=TransformationFilterDither.FLOYDSTEINBERG
             ),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BNW/none",
             transformation=ImageTransformations.BLACK_AND_WHITE,
             filters=TransformationFiltersBlackAndWhite(
                 dither=TransformationFilterDither.NONE
             ),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BLUR/default",
             transformation=ImageTransformations.BLUR,
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BLUR/gaussian_86",
             transformation=ImageTransformations.BLUR,
             filters=TransformationFiltersBlur(
@@ -78,7 +78,7 @@ def transform_uploaded_images(
                 radius=86,
             ),
         ),
-        ImageTransformationDataClass(
+        ImageTransformationDefinition(
             identifier="BLUR/box_48",
             transformation=ImageTransformations.BLUR,
             filters=TransformationFiltersBlur(
