@@ -1,9 +1,9 @@
 """
 For more information on this file, see
-https://docs.djangoproject.com/en/5.1/topics/settings/
+https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/5.1/ref/settings/
+https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
@@ -16,7 +16,7 @@ DEBUG = False
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # Django settings
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     *LOCAL_APPS,
 ]
 
-# https://docs.djangoproject.com/en/5.1/ref/middleware/
+# https://docs.djangoproject.com/en/5.2/ref/middleware/
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -69,14 +69,14 @@ MIDDLEWARE = [
 ]
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"
 
-# https://docs.djangoproject.com/en/5.1/ref/settings/#storages
+# https://docs.djangoproject.com/en/5.2/ref/settings/#storages
 # https://whitenoise.readthedocs.io/en/latest/django.html#add-compression-and-caching-support
 STORAGES = {
     "default": {
@@ -112,7 +112,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "humanify_project.wsgi.application"
 
 # Logging
-# https://docs.djangoproject.com/en/5.1/topics/logging/
+# https://docs.djangoproject.com/en/5.2/topics/logging/
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -163,7 +163,7 @@ LOGGING = {
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -181,7 +181,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
@@ -191,7 +191,7 @@ USE_TZ = True
 AUTH_USER_MODEL = "users.BaseUser"
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 from humanify_project.extra_settings.django_tasks import *  # noqa
