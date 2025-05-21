@@ -7,6 +7,7 @@ from apps.images.processing.transformations import (
     TransformationThumbnail,
 )
 from apps.images.processing.transformers import (
+    ImageChainTransformer,
     ImageMultiProcessTransformer,
     ImageSequentialTransformer,
 )
@@ -101,3 +102,34 @@ def test_image_sequential_transformer():
     mock_thumbnail_t.assert_called_with(image, {"size": (64, 64)})
     mock_blur_t.assert_called_with(image, {})
     mock_bnw_t.assert_called_with(image, {})
+
+
+def test_image_chain_transformer():
+    image = MagicMock()
+    mock_thumbnail_t = MagicMock()
+    mock_blur_t = MagicMock()
+    mock_bnw_t = MagicMock()
+    thumbnail_size = {"size": (64, 64)}
+
+    transformations = [
+        ImageProcessingTransformationDataClass(
+            identifier="THUMBNAIL",
+            transformation=mock_thumbnail_t,
+            filters=thumbnail_size,
+        ),
+        ImageProcessingTransformationDataClass(
+            identifier="BLACK_AND_WHITE", transformation=mock_bnw_t, filters={}
+        ),
+        ImageProcessingTransformationDataClass(
+            identifier="BLUR", transformation=mock_blur_t, filters={}
+        ),
+    ]
+    transformer = ImageChainTransformer(transformations=transformations)
+    transformations_applied = transformer.transform(image)
+
+    assert len(transformations_applied) == 1
+    assert transformations_applied[0].identifier != (
+        "THUMBNAIL",
+        "BLACK_AND_WHITE",
+        "BLUR",
+    )
