@@ -2,20 +2,20 @@ import pytest
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.images.constants import ImageTransformations
-from apps.images.data_models import ImageTransformationDefinition
-from apps.images.processing import utils
-from apps.images.processing.data_models import (
+from apps.image_processing.data_models import (
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
     InternalTransformationMapper,
 )
-from apps.images.processing.transformations import (
+from apps.image_processing.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
 )
+from apps.images import utils
+from apps.images.constants import ImageTransformations
+from apps.images.data_models import ImageTransformationDefinition
 
 
 @pytest.mark.parametrize(

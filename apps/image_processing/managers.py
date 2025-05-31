@@ -5,11 +5,11 @@ from pathlib import Path
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.images.processing.data_models import (
+from apps.image_processing.data_models import (
     InternalImageTransformationResult,
     InternalTransformationManagerSaveResult,
 )
-from apps.images.processing.transformers import BaseImageTransformer
+from apps.image_processing.transformers import BaseImageTransformer
 
 
 class BaseImageManager(ABC):

@@ -2,16 +2,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from apps.image_processing.data_models import InternalImageTransformationDefinition
+from apps.image_processing.transformers import (
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
+)
 from apps.images.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
 )
 from apps.images.data_models import ImageTransformationDefinition
-from apps.images.processing.data_models import InternalImageTransformationDefinition
-from apps.images.processing.transformers import (
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
-)
 from apps.images.services import get_local_transformer, image_local_transform
 
 

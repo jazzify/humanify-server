@@ -5,7 +5,7 @@ from typing import Callable, Generator
 
 from PIL import Image as PImage
 
-from apps.images.processing.data_models import (
+from apps.image_processing.data_models import (
     InternalImageTransformation,
     InternalImageTransformationDefinition,
     InternalImageTransformationResult,
@@ -102,6 +102,14 @@ class ImageChainTransformer(BaseImageTransformer):
 
     def transform(self, image: PImage.Image) -> list[InternalImageTransformationResult]:
         identifier = uuid.uuid4()
+
+        # TODO: We can make this more "efficient" by understanding the
+        # wanted output image final state and appling the transformations
+        # in the correct order, for example, instead of applying (Black and White -> Crop),
+        # we can do (Crop -> Black and White) the output image should be the same but
+        # applying the black and white filter to a cropped image will consume less resources.
+        # however, the order of the transformations is important, since there are
+        # some transformations that MUST be applied first.
         transformed_image = next(
             self._transform(image, list(reversed(self.transformations_data)))
         )

@@ -1,5 +1,14 @@
 from dataclasses import asdict
 
+from apps.image_processing.data_models import (
+    InternalImageTransformationDefinition,
+    InternalTransformationMapper,
+)
+from apps.image_processing.transformations import (
+    TransformationBlackAndWhite,
+    TransformationBlur,
+    TransformationThumbnail,
+)
 from apps.images.constants import ImageTransformations
 from apps.images.data_models import (
     ImageTransformationDefinition,
@@ -7,15 +16,6 @@ from apps.images.data_models import (
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
-)
-from apps.images.processing.data_models import (
-    InternalImageTransformationDefinition,
-    InternalTransformationMapper,
-)
-from apps.images.processing.transformations import (
-    TransformationBlackAndWhite,
-    TransformationBlur,
-    TransformationThumbnail,
 )
 
 
@@ -46,6 +46,7 @@ def transformations_mapper(
 
     transformation_map = _mapper[transformation]
     return InternalTransformationMapper(
+        # TODO: search for a better way to handle typing here?
         transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
         filters=transformation_map["filters"](**dict_filters).to_internal(),
     )

@@ -1,7 +1,7 @@
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.images.processing.managers import ImageLocalManager
+from apps.image_processing.managers import ImageLocalManager
 
 
 class TestImageLocalManager:
