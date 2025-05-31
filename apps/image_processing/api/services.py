@@ -43,5 +43,7 @@ def image_local_transform(
         transformations=transformations_data, is_chain=is_chain
     )
     image_manager = ImageLocalManager(image_path, transformer=transformer)
-    image_manager.apply_transformations()
-    return image_manager.save(parent_folder=parent_folder)
+    applied_transformations = image_manager.apply_transformations()
+    return image_manager.save(
+        parent_folder=parent_folder, transformations=applied_transformations
+    )

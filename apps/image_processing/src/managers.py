@@ -34,26 +34,24 @@ class BaseImageManager(ABC):
         """
         self.image_path = image_path
         self.transformer = transformer
-        self._transformations_applied: list[InternalImageTransformationResult] = []
         self._opened_image: PImage.Image = self._get_image()
 
-    def apply_transformations(self) -> None:
+    def apply_transformations(self) -> list[InternalImageTransformationResult]:
         """
         Applies transformations to the image.
 
-        If a transformer is set, applies the transformations specified by the
-        transformer to the image and stores the transformed images in the
-        _transformations_applied attribute.
+        Applies the transformations specified by the transformer to the image and
+        returns a list of InternalImageTransformationResult with the transformed images.
 
         Args:
 
         Returns:
-            None
+            list[InternalImageTransformationResult]: A list of InternalImageTransformationResult
         """
-        if self.transformer:
-            self._transformations_applied = self.transformer.transform(
-                image=self._opened_image
-            )
+        if not self.transformer:
+            raise NotImplementedError("No transformer set")
+
+        return self.transformer.transform(image=self._opened_image)
 
     def get_image(self) -> PImage.Image:
         """
@@ -74,7 +72,11 @@ class BaseImageManager(ABC):
         """
 
     @abstractmethod
-    def save(self, parent_folder: str) -> list[InternalTransformationManagerSaveResult]:
+    def save(
+        self,
+        parent_folder: str,
+        transformations: list[InternalImageTransformationResult],
+    ) -> list[InternalTransformationManagerSaveResult]:
         """
         Saves the transformed images.
 
@@ -95,12 +97,16 @@ class ImageLocalManager(BaseImageManager):
     def _get_image(self) -> PImage.Image:
         return PImage.open(self.image_path)
 
-    def save(self, parent_folder: str) -> list[InternalTransformationManagerSaveResult]:
+    def save(
+        self,
+        parent_folder: str,
+        transformations: list[InternalImageTransformationResult],
+    ) -> list[InternalTransformationManagerSaveResult]:
         saved_images = []
-        if len(self._transformations_applied):
+        if len(transformations):
             path_default = f"{settings.MEDIA_ROOT}/processed/{parent_folder}"
 
-            for transformation in self._transformations_applied:
+            for transformation in transformations:
                 path_id = f"{path_default}/{transformation.identifier}"
                 Path(path_id).mkdir(parents=True, exist_ok=True)
 

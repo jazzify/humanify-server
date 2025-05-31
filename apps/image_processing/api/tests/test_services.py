@@ -77,7 +77,10 @@ def test_image_local_transform(
 
     mock_instance = mock_image_local_manager.return_value
     mock_instance.apply_transformations.assert_called_once()
-    mock_instance.save.assert_called_once_with(parent_folder=parent_folder)
+    mock_instance.save.assert_called_once_with(
+        parent_folder=parent_folder,
+        transformations=mock_instance.apply_transformations.return_value,
+    )
 
     assert result == expected_save_result
 
