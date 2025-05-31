@@ -30,7 +30,6 @@ LOCAL_APPS = [
     "apps.common",
     "apps.users",
     "apps.places",
-    "apps.images",
     "apps.image_processing",
 ]
 

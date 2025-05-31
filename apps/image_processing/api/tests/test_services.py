@@ -2,29 +2,34 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.image_processing.data_models import InternalImageTransformationDefinition
-from apps.image_processing.transformers import (
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
-)
-from apps.images.constants import (
+from apps.image_processing.api.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
 )
-from apps.images.data_models import ImageTransformationDefinition
-from apps.images.services import get_local_transformer, image_local_transform
+from apps.image_processing.api.data_models import ImageTransformationDefinition
+from apps.image_processing.api.services import (
+    get_local_transformer,
+    image_local_transform,
+)
+from apps.image_processing.src.data_models import InternalImageTransformationDefinition
+from apps.image_processing.src.transformers import (
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
+)
 
 
 @pytest.fixture
 def mock_get_transformation_dataclasses():
-    with patch("apps.images.services.get_transformation_dataclasses") as mock:
+    with patch(
+        "apps.image_processing.api.services.get_transformation_dataclasses"
+    ) as mock:
         mock.return_value = [MagicMock(), MagicMock()]
         yield mock
 
 
 @pytest.fixture
 def mock_get_local_transformer():
-    with patch("apps.images.services.get_local_transformer") as mock:
+    with patch("apps.image_processing.api.services.get_local_transformer") as mock:
         mock_transformer_instance = MagicMock()
         mock.return_value = mock_transformer_instance
         yield mock
@@ -32,7 +37,7 @@ def mock_get_local_transformer():
 
 @pytest.fixture
 def mock_image_local_manager():
-    with patch("apps.images.services.ImageLocalManager") as mock:
+    with patch("apps.image_processing.api.services.ImageLocalManager") as mock:
         mock_manager_instance = MagicMock()
         mock_manager_instance.apply_transformations = MagicMock()
         mock_manager_instance.save.return_value = {

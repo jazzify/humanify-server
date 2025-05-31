@@ -5,17 +5,17 @@ from typing import Sequence
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.image_processing.data_models import (
-    InternalImageTransformationFilters,
-    InternalTransformationFiltersBlackAndWhite,
-    InternalTransformationFiltersBlur,
-    InternalTransformationFiltersThumbnail,
-)
-from apps.images.constants import (
+from apps.image_processing.api.constants import (
     ImageTransformations,
     TransformationFilterBlurFilter,
     TransformationFilterDither,
     TransformationFilterThumbnailResampling,
+)
+from apps.image_processing.src.data_models import (
+    InternalImageTransformationFilters,
+    InternalTransformationFiltersBlackAndWhite,
+    InternalTransformationFiltersBlur,
+    InternalTransformationFiltersThumbnail,
 )
 
 

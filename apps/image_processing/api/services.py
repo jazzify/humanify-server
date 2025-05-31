@@ -1,20 +1,20 @@
 import logging
 from typing import Type
 
-from apps.image_processing.data_models import (
+from apps.image_processing.api.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
+from apps.image_processing.api.data_models import ImageTransformationDefinition
+from apps.image_processing.api.utils import get_transformation_dataclasses
+from apps.image_processing.src.data_models import (
     InternalImageTransformationDefinition,
     InternalTransformationManagerSaveResult,
 )
-from apps.image_processing.managers import ImageLocalManager
-from apps.image_processing.transformers import (
+from apps.image_processing.src.managers import ImageLocalManager
+from apps.image_processing.src.transformers import (
     BaseImageTransformer,
     ImageChainTransformer,
     ImageMultiProcessTransformer,
     ImageSequentialTransformer,
 )
-from apps.images.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
-from apps.images.data_models import ImageTransformationDefinition
-from apps.images.utils import get_transformation_dataclasses
 
 logger = logging.getLogger(__name__)
 

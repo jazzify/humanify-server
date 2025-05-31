@@ -1,21 +1,21 @@
 from dataclasses import asdict
 
-from apps.image_processing.data_models import (
-    InternalImageTransformationDefinition,
-    InternalTransformationMapper,
-)
-from apps.image_processing.transformations import (
-    TransformationBlackAndWhite,
-    TransformationBlur,
-    TransformationThumbnail,
-)
-from apps.images.constants import ImageTransformations
-from apps.images.data_models import (
+from apps.image_processing.api.constants import ImageTransformations
+from apps.image_processing.api.data_models import (
     ImageTransformationDefinition,
     TransformationFilters,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
+)
+from apps.image_processing.src.data_models import (
+    InternalImageTransformationDefinition,
+    InternalTransformationMapper,
+)
+from apps.image_processing.src.transformations import (
+    TransformationBlackAndWhite,
+    TransformationBlur,
+    TransformationThumbnail,
 )
 
 

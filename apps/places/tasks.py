@@ -9,19 +9,19 @@ logger = logging.getLogger(__name__)
 def transform_uploaded_images(
     file_path: str, root_folder: str, parent_folder: str
 ) -> None:
-    from apps.images.constants import (
+    from apps.image_processing.api.constants import (
         ImageTransformations,
         TransformationFilterBlurFilter,
         TransformationFilterDither,
         TransformationFilterThumbnailResampling,
     )
-    from apps.images.data_models import (
+    from apps.image_processing.api.data_models import (
         ImageTransformationDefinition,
         TransformationFiltersBlackAndWhite,
         TransformationFiltersBlur,
         TransformationFiltersThumbnail,
     )
-    from apps.images.services import image_local_transform
+    from apps.image_processing.api.services import image_local_transform
 
     logger.info(f"Transforming image {file_path}")
     transformations = [

@@ -10,6 +10,7 @@ from PIL import ImageFilter
 class InternalImageTransformationFilters(ABC): ...
 
 
+@dataclass
 class InternalImageTransformation(ABC):
     """
     Abstract class that applies Subclass transformation at subclass
