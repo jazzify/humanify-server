@@ -1,6 +1,10 @@
 from dataclasses import asdict
+from typing import Type
 
-from apps.image_processing.api.constants import ImageTransformations
+from apps.image_processing.api.constants import (
+    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
+    ImageTransformations,
+)
 from apps.image_processing.api.data_models import (
     ImageTransformationDefinition,
     TransformationFilters,
@@ -16,6 +20,12 @@ from apps.image_processing.src.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
+)
+from apps.image_processing.src.transformers import (
+    BaseImageTransformer,
+    ImageChainTransformer,
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
 )
 
 
@@ -50,6 +60,19 @@ def transformations_mapper(
         transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
         filters=transformation_map["filters"](**dict_filters).to_internal(),
     )
+
+
+def get_local_transformer(
+    transformations: list[InternalImageTransformationDefinition],
+    is_chain: bool = False,
+) -> BaseImageTransformer:
+    transformer: Type[BaseImageTransformer] = ImageSequentialTransformer
+    if is_chain:
+        transformer = ImageChainTransformer
+    elif len(transformations) >= TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
+        transformer = ImageMultiProcessTransformer
+
+    return transformer(transformations=transformations)
 
 
 def get_transformation_dataclasses(

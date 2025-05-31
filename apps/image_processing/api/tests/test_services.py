@@ -2,20 +2,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from apps.image_processing.api.constants import (
-    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
-    ImageTransformations,
-)
+from apps.image_processing.api.constants import ImageTransformations
 from apps.image_processing.api.data_models import ImageTransformationDefinition
-from apps.image_processing.api.services import (
-    get_local_transformer,
-    image_local_transform,
-)
-from apps.image_processing.src.data_models import InternalImageTransformationDefinition
-from apps.image_processing.src.transformers import (
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
-)
+from apps.image_processing.api.services import image_local_transform
 
 
 @pytest.fixture
@@ -83,28 +72,3 @@ def test_image_local_transform(
     )
 
     assert result == expected_save_result
-
-
-@pytest.mark.parametrize(
-    "num_transformations, expected_transformer_type",
-    [
-        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD - 1, ImageSequentialTransformer),
-        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD, ImageMultiProcessTransformer),
-        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD + 1, ImageMultiProcessTransformer),
-    ],
-)
-def test_get_local_transformer(
-    num_transformations: int, expected_transformer_type: type
-):
-    mock_transformations = [
-        MagicMock(spec=InternalImageTransformationDefinition)
-        for _ in range(num_transformations)
-    ]
-
-    transformer = get_local_transformer(transformations=mock_transformations)
-
-    assert isinstance(transformer, expected_transformer_type)
-    if num_transformations > 0:
-        assert transformer.transformations_data == mock_transformations
-    else:
-        assert transformer.transformations_data == []

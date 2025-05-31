@@ -1,35 +1,16 @@
 import logging
-from typing import Type
 
-from apps.image_processing.api.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
 from apps.image_processing.api.data_models import ImageTransformationDefinition
-from apps.image_processing.api.utils import get_transformation_dataclasses
+from apps.image_processing.api.utils import (
+    get_local_transformer,
+    get_transformation_dataclasses,
+)
 from apps.image_processing.src.data_models import (
-    InternalImageTransformationDefinition,
     InternalTransformationManagerSaveResult,
 )
 from apps.image_processing.src.managers import ImageLocalManager
-from apps.image_processing.src.transformers import (
-    BaseImageTransformer,
-    ImageChainTransformer,
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
-)
 
 logger = logging.getLogger(__name__)
-
-
-def get_local_transformer(
-    transformations: list[InternalImageTransformationDefinition],
-    is_chain: bool = False,
-) -> BaseImageTransformer:
-    transformer: Type[BaseImageTransformer] = ImageSequentialTransformer
-    if is_chain:
-        transformer = ImageChainTransformer
-    elif len(transformations) >= TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
-        transformer = ImageMultiProcessTransformer
-
-    return transformer(transformations=transformations)
 
 
 def image_local_transform(
@@ -38,6 +19,27 @@ def image_local_transform(
     parent_folder: str,
     is_chain: bool = False,
 ) -> list[InternalTransformationManagerSaveResult]:
+    """
+    Transforms a local image using specified transformations and saves the results.
+
+    This function processes an image located at the specified path using a list of
+    image transformations. The transformed images are saved under the specified
+    parent folder. The function returns a list of results indicating the paths
+    where the transformed images were saved.
+
+    Args:
+        image_path (str): The path to the local image file to be transformed.
+        transformations (list[ImageTransformationDefinition]): A list of
+            transformation definitions to apply to the image.
+        parent_folder (str): The name of the parent folder where transformed
+            images will be saved.
+        is_chain (bool, optional): A flag indicating whether to use a chain
+            transformer. Defaults to False.
+
+    Returns:
+        list[InternalTransformationManagerSaveResult]: A list containing the
+        results of the transformation, including the paths of the saved images.
+    """
     transformations_data = get_transformation_dataclasses(transformations)
     transformer = get_local_transformer(
         transformations=transformations_data, is_chain=is_chain
