@@ -40,6 +40,7 @@ class PlaceImageAPI(APIView):
         serializer.is_valid(raise_exception=True)
 
         place_images_create(
+            user=request.user,
             place_id=place_id,
             images=serializer.validated_data["files"],
         )

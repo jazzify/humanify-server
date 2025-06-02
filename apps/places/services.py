@@ -81,7 +81,9 @@ def place_delete_by_id_and_user(place_id: int, user: BaseUser) -> None:
         )
 
 
-def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceImage]:
+def place_images_create(
+    user: BaseUser, place_id: int, images: list[ImageFile]
+) -> list[PlaceImage]:
     try:
         current_place_images = PlaceImage.objects.filter(place_id=place_id).count()
         if (len(images) + current_place_images) > PLACE_IMAGES_LIMIT:
@@ -101,8 +103,8 @@ def place_images_create(place_id: int, images: list[ImageFile]) -> list[PlaceIma
             created_place_images.append(place_image)
 
             transform_uploaded_images.enqueue(
+                user_id=user.id,
                 file_path=place_image.image.path,
-                root_folder="place_images",
                 parent_folder=str(place_image.id),
             )
 
