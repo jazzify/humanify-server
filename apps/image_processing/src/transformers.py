@@ -1,10 +1,10 @@
-import uuid
 from abc import ABC, abstractmethod
 from concurrent import futures as cfutures
 from typing import Callable, Generator
 
 from PIL import Image as PImage
 
+from apps.image_processing.src.constants import InternalTransformerNames
 from apps.image_processing.src.data_models import (
     InternalImageTransformation,
     InternalImageTransformationDefinition,
@@ -13,8 +13,11 @@ from apps.image_processing.src.data_models import (
 
 
 class BaseImageTransformer(ABC):
+    name: str
+
     def __init__(
-        self, transformations: list[InternalImageTransformationDefinition]
+        self,
+        transformations: list[InternalImageTransformationDefinition],
     ) -> None:
         self.transformations_data = transformations
 
@@ -25,6 +28,8 @@ class BaseImageTransformer(ABC):
 
 
 class ImageMultiProcessTransformer(BaseImageTransformer):
+    name = InternalTransformerNames.MULTIPROCESS
+
     def __init__(
         self, transformations: list[InternalImageTransformationDefinition]
     ) -> None:
@@ -59,6 +64,8 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
 
 
 class ImageSequentialTransformer(BaseImageTransformer):
+    name = InternalTransformerNames.SEQUENTIAL
+
     def transform(self, image: PImage.Image) -> list[InternalImageTransformationResult]:
         transformations = []
         for transform_data in self.transformations_data:
@@ -76,6 +83,8 @@ class ImageSequentialTransformer(BaseImageTransformer):
 
 
 class ImageChainTransformer(BaseImageTransformer):
+    name = InternalTransformerNames.CHAIN
+
     def _transform(
         self,
         image: PImage.Image,
@@ -101,7 +110,10 @@ class ImageChainTransformer(BaseImageTransformer):
             )
 
     def transform(self, image: PImage.Image) -> list[InternalImageTransformationResult]:
-        identifier = uuid.uuid4()
+        all_identifiers = [
+            transform_data.identifier for transform_data in self.transformations_data
+        ]
+        identifier = "-".join(all_identifiers)
 
         # TODO: We can make this more "efficient" by understanding the
         # wanted output image final state and appling the transformations
@@ -115,6 +127,6 @@ class ImageChainTransformer(BaseImageTransformer):
         )
         return [
             InternalImageTransformationResult(
-                identifier=str(identifier), image=transformed_image
+                identifier=identifier, image=transformed_image
             )
         ]

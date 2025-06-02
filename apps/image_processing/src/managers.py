@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 
 from django.conf import settings
+from django.core.files import File
 from PIL import Image as PImage
 
 from apps.image_processing.src.data_models import (
@@ -52,6 +54,12 @@ class BaseImageManager(ABC):
             raise NotImplementedError("No transformer set")
 
         return self.transformer.transform(image=self._opened_image)
+
+    def get_file(self) -> File[bytes]:
+        file_name = self.image_path.split("/")[-1]
+        bytes_image = BytesIO(self.get_image().tobytes())
+        bytes_image.seek(0)
+        return File(bytes_image, name=file_name)
 
     def get_image(self) -> PImage.Image:
         """
@@ -117,5 +125,4 @@ class ImageLocalManager(BaseImageManager):
                         identifier=transformation.identifier, path=final_path
                     )
                 )
-            return saved_images
         return saved_images

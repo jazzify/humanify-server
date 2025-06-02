@@ -26,6 +26,7 @@ from apps.image_processing.src.transformations import (
     TransformationThumbnail,
 )
 from apps.image_processing.src.transformers import (
+    ImageChainTransformer,
     ImageMultiProcessTransformer,
     ImageSequentialTransformer,
 )
@@ -107,7 +108,7 @@ def test_get_transformation_dataclasses_callable_mock():
         (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD + 1, ImageMultiProcessTransformer),
     ],
 )
-def test_get_local_transformer(
+def test_get_local_transformer_seq_or_multi(
     num_transformations: int, expected_transformer_type: type
 ):
     mock_transformations = [
@@ -122,3 +123,16 @@ def test_get_local_transformer(
         assert transformer.transformations_data == mock_transformations
     else:
         assert transformer.transformations_data == []
+
+
+def test_get_local_transformer_chain():
+    mock_transformations = [
+        MagicMock(spec=InternalImageTransformationDefinition) for _ in range(10)
+    ]
+
+    transformer = get_local_transformer(
+        transformations=mock_transformations, is_chain=True
+    )
+
+    assert isinstance(transformer, ImageChainTransformer)
+    assert transformer.transformations_data == mock_transformations
