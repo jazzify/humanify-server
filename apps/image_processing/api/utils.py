@@ -1,21 +1,31 @@
 from dataclasses import asdict
+from typing import Type
 
-from apps.images.constants import ImageTransformations
-from apps.images.data_models import (
+from apps.image_processing.api.constants import (
+    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
+    ImageTransformations,
+)
+from apps.image_processing.api.data_models import (
     ImageTransformationDefinition,
     TransformationFilters,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
 )
-from apps.images.processing.data_models import (
+from apps.image_processing.src.data_models import (
     InternalImageTransformationDefinition,
     InternalTransformationMapper,
 )
-from apps.images.processing.transformations import (
+from apps.image_processing.src.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
+)
+from apps.image_processing.src.transformers import (
+    BaseImageTransformer,
+    ImageChainTransformer,
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
 )
 
 
@@ -46,9 +56,23 @@ def transformations_mapper(
 
     transformation_map = _mapper[transformation]
     return InternalTransformationMapper(
+        # TODO: search for a better way to handle typing here?
         transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
         filters=transformation_map["filters"](**dict_filters).to_internal(),
     )
+
+
+def get_local_transformer(
+    transformations: list[InternalImageTransformationDefinition],
+    is_chain: bool = False,
+) -> BaseImageTransformer:
+    transformer: Type[BaseImageTransformer] = ImageSequentialTransformer
+    if is_chain:
+        transformer = ImageChainTransformer
+    elif len(transformations) >= TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
+        transformer = ImageMultiProcessTransformer
+
+    return transformer(transformations=transformations)
 
 
 def get_transformation_dataclasses(

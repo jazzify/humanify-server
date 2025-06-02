@@ -5,7 +5,7 @@ import pytest
 from apps.places.tasks import transform_uploaded_images
 
 
-@patch("apps.images.services.image_local_transform")
+@patch("apps.image_processing.api.services.image_local_transform")
 @pytest.mark.django_db
 def test_transform_uploaded_images(mock_image_local_transform):
     file_path = "path/to/file.jpg"

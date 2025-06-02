@@ -1,20 +1,34 @@
+from unittest.mock import MagicMock
+
 import pytest
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.images.constants import ImageTransformations
-from apps.images.data_models import ImageTransformationDefinition
-from apps.images.processing import utils
-from apps.images.processing.data_models import (
+from apps.image_processing.api import utils
+from apps.image_processing.api.constants import (
+    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
+    ImageTransformations,
+)
+from apps.image_processing.api.data_models import ImageTransformationDefinition
+from apps.image_processing.api.services import (
+    get_local_transformer,
+)
+from apps.image_processing.src.data_models import (
+    InternalImageTransformationDefinition,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
     InternalTransformationMapper,
 )
-from apps.images.processing.transformations import (
+from apps.image_processing.src.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
+)
+from apps.image_processing.src.transformers import (
+    ImageChainTransformer,
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
 )
 
 
@@ -84,3 +98,41 @@ def test_get_transformation_dataclasses_callable_mock():
         size=(128, 128), resample=PImage.Resampling.BICUBIC, reducing_gap=2
     )
     assert result_dataclasses[0].identifier == "test1"
+
+
+@pytest.mark.parametrize(
+    "num_transformations, expected_transformer_type",
+    [
+        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD - 1, ImageSequentialTransformer),
+        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD, ImageMultiProcessTransformer),
+        (TRANSFORMATIONS_MULTIPROCESS_TRESHOLD + 1, ImageMultiProcessTransformer),
+    ],
+)
+def test_get_local_transformer_seq_or_multi(
+    num_transformations: int, expected_transformer_type: type
+):
+    mock_transformations = [
+        MagicMock(spec=InternalImageTransformationDefinition)
+        for _ in range(num_transformations)
+    ]
+
+    transformer = get_local_transformer(transformations=mock_transformations)
+
+    assert isinstance(transformer, expected_transformer_type)
+    if num_transformations > 0:
+        assert transformer.transformations_data == mock_transformations
+    else:
+        assert transformer.transformations_data == []
+
+
+def test_get_local_transformer_chain():
+    mock_transformations = [
+        MagicMock(spec=InternalImageTransformationDefinition) for _ in range(10)
+    ]
+
+    transformer = get_local_transformer(
+        transformations=mock_transformations, is_chain=True
+    )
+
+    assert isinstance(transformer, ImageChainTransformer)
+    assert transformer.transformations_data == mock_transformations

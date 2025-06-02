@@ -26,6 +26,7 @@ repos:
       - id: mypy
         args: [--strict, --disable-error-code=misc]
         additional_dependencies: [
+          Pillow,
           django-stubs,
           django,
           whitenoise,

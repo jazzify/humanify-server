@@ -6,22 +6,20 @@ logger = logging.getLogger(__name__)
 
 
 @task(queue_name="place_images")
-def transform_uploaded_images(
-    file_path: str, root_folder: str, parent_folder: str
-) -> None:
-    from apps.images.constants import (
+def transform_uploaded_images(user_id: int, file_path: str, parent_folder: str) -> None:
+    from apps.image_processing.api.constants import (
         ImageTransformations,
         TransformationFilterBlurFilter,
         TransformationFilterDither,
         TransformationFilterThumbnailResampling,
     )
-    from apps.images.data_models import (
+    from apps.image_processing.api.data_models import (
         ImageTransformationDefinition,
         TransformationFiltersBlackAndWhite,
         TransformationFiltersBlur,
         TransformationFiltersThumbnail,
     )
-    from apps.images.services import image_local_transform
+    from apps.image_processing.api.services import image_local_transform
 
     logger.info(f"Transforming image {file_path}")
     transformations = [
@@ -88,6 +86,7 @@ def transform_uploaded_images(
         ),
     ]
     applied_transformations = image_local_transform(
+        user_id=user_id,
         image_path=file_path,
         transformations=transformations,
         parent_folder=parent_folder,

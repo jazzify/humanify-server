@@ -140,6 +140,7 @@ def test_place_images_create(mock_transform_uploaded_images, user):
     )
 
     place_images_create(
+        user=user,
         place_id=place.id,
         images=[image1],
     )
@@ -147,8 +148,8 @@ def test_place_images_create(mock_transform_uploaded_images, user):
     assert place.images.count() == 1
 
     mock_transform_uploaded_images.enqueue.assert_called_once_with(
+        user_id=user.id,
         file_path=f"{settings.MEDIA_ROOT}/place_images/test_image1.jpg",
-        root_folder="place_images",
         parent_folder=str(1),
     )
 
@@ -164,7 +165,7 @@ def test_place_images_create_exceed_limit(user):
         )
         for i in range(PLACE_IMAGES_LIMIT)
     ]
-    place_images_create(place_id=place.id, images=images)
+    place_images_create(user=user, place_id=place.id, images=images)
     assert place.images.count() == PLACE_IMAGES_LIMIT
     extra_image = SimpleUploadedFile(
         name="extra_image.jpg",
@@ -175,12 +176,12 @@ def test_place_images_create_exceed_limit(user):
         ValidationError,
         match=f"A place cannot have more than {PLACE_IMAGES_LIMIT} images.",
     ):
-        place_images_create(place_id=place.id, images=[extra_image])
+        place_images_create(user=user, place_id=place.id, images=[extra_image])
     assert place.images.count() == PLACE_IMAGES_LIMIT
 
 
 @pytest.mark.django_db
-def test_place_images_create_invalid_place():
+def test_place_images_create_invalid_place(user):
     invalid_place_id = 999999
     image = SimpleUploadedFile(
         name="test_image.jpg",
@@ -188,7 +189,7 @@ def test_place_images_create_invalid_place():
         content_type="image/jpeg",
     )
     with pytest.raises(ValidationError, match="Place with id"):
-        place_images_create(place_id=invalid_place_id, images=[image])
+        place_images_create(user=user, place_id=invalid_place_id, images=[image])
 
 
 @pytest.mark.django_db

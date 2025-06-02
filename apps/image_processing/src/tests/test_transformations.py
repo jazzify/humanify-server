@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PIL import Image, ImageFilter
 
-from apps.images.processing import transformations as image_transformations
-from apps.images.processing.data_models import (
+from apps.image_processing.src import transformations as image_transformations
+from apps.image_processing.src.data_models import (
     InternalImageTransformation,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,

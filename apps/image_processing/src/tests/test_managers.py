@@ -1,7 +1,8 @@
+import pytest
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.images.processing.managers import ImageLocalManager
+from apps.image_processing.src.managers import ImageLocalManager
 
 
 class TestImageLocalManager:
@@ -16,22 +17,22 @@ class TestImageLocalManager:
         manager = ImageLocalManager(
             image_path=temp_image_file, transformer=mock_transformer_with_data
         )
-        manager.apply_transformations()
+        transformations_applied = manager.apply_transformations()
 
         mock_transformer_with_data.transform.assert_called_once_with(
             image=manager._opened_image
         )
-        assert len(manager._transformations_applied) == 1
+        assert len(transformations_applied) == 1
         assert (
-            manager._transformations_applied[0].identifier
+            transformations_applied[0].identifier
             == blur_transformation_instance.identifier
         )
-        assert isinstance(manager._transformations_applied[0].image, PImage.Image)
+        assert isinstance(transformations_applied[0].image, PImage.Image)
 
     def test_apply_transformations_without_transformer(self, temp_image_file):
         manager = ImageLocalManager(image_path=temp_image_file, transformer=None)
-        manager.apply_transformations()
-        assert len(manager._transformations_applied) == 0
+        with pytest.raises(NotImplementedError):
+            manager.apply_transformations()
 
     def test_save_with_transformations(
         self, temp_image_file, mock_transformer_with_data, blur_transformation_instance
@@ -40,8 +41,10 @@ class TestImageLocalManager:
         manager = ImageLocalManager(
             image_path=temp_image_file, transformer=mock_transformer_with_data
         )
-        manager.apply_transformations()
-        saved_urls = manager.save(parent_folder=parent_folder_name)
+        transformations_applied = manager.apply_transformations()
+        saved_urls = manager.save(
+            parent_folder=parent_folder_name, transformations=transformations_applied
+        )
 
         transformation = saved_urls[0]
 
@@ -60,26 +63,18 @@ class TestImageLocalManager:
         assert len(saved_files_in_dir) == 1
         assert transformation.path == str(saved_files_in_dir[0])
 
-    def test_save_without_applied_transformations(self, temp_image_file, tmp_path):
-        manager = ImageLocalManager(image_path=temp_image_file, transformer=None)
-        manager.apply_transformations()
-
-        parent_folder_name = "test_save_no_trans"
-        saved_urls = manager.save(parent_folder=parent_folder_name)
-
-        assert len(saved_urls) == 0
-        assert not (tmp_path / "processed" / parent_folder_name).exists()
-
     def test_save_with_transformer_but_empty_result(
         self, temp_image_file, mock_transformer_empty_result, tmp_path
     ):
         manager = ImageLocalManager(
             image_path=temp_image_file, transformer=mock_transformer_empty_result
         )
-        manager.apply_transformations()
+        transformations_applied = manager.apply_transformations()
 
         parent_folder_name = "test_save_empty_trans_result"
-        saved_urls = manager.save(parent_folder=parent_folder_name)
+        saved_urls = manager.save(
+            parent_folder=parent_folder_name, transformations=transformations_applied
+        )
 
         assert len(saved_urls) == 0
         assert not (tmp_path / "processed" / parent_folder_name).exists()
