@@ -1,27 +1,12 @@
-from dataclasses import dataclass, field
 from typing import Generator, Sequence
 
-from PIL.Image import Image as PImage
 from ultralytics import YOLO
 
-
-@dataclass
-class DetectorObjectResult:
-    type: int
-    name: str
-    box: list[float]
-
-
-@dataclass
-class DetectorResult:
-    identifier: str
-    objects: list[DetectorObjectResult] = field(default_factory=list)
-
-
-@dataclass
-class DetectorImage:
-    identifier: str
-    image: PImage | str
+from apps.image_processing.src.data_models import (
+    DetectorImage,
+    DetectorObjectResult,
+    DetectorResult,
+)
 
 
 class CommonObjectDetector:
