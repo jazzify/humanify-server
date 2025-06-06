@@ -96,3 +96,7 @@ dmypy.json
 
 # Test media files
 test_media/
+
+
+# YOLO Model
+yolo11l.pt

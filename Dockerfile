@@ -6,12 +6,14 @@ ENV DJANGO_SETTINGS_MODULE humanify_project.settings.prod
 
 WORKDIR /code
 
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+
 EXPOSE 80
 
 RUN pip install uv
 
 COPY pyproject.toml ./
-RUN uv sync --no-dev --no-cache
+RUN uv sync --no-dev
 
 COPY . .
 
