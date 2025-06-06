@@ -16,10 +16,6 @@ class Image(BaseModel):
     class Meta:
         ordering = ["-updated_at"]
 
-    @property
-    def url(self) -> str:
-        return self.file.url  # type: ignore[no-any-return]
-
 
 class TransformationBatch(BaseModel):
     TRANSFORMER_CHOICES = [
