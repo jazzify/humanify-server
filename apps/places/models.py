@@ -10,7 +10,7 @@ class PlaceTag(BaseModel):
     user = models.ForeignKey(
         BaseUser, on_delete=models.CASCADE, related_name="place_tags"
     )
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=20)
 
     def __str__(self) -> str:
         return self.name
