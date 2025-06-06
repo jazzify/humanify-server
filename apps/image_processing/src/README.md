@@ -2,37 +2,37 @@
 
 This app is responsible for handling image processing and transformations.
 
-## Core Functionalities
+## Core Concepts
 
 - **Image Transformations**: Provides capabilities to transform images in various ways and provide different processing strategies.
 - **Transformation Management**: Provides a high-level interface for general image operations.
-- **Extensible Design**: Built with a clear separation of concerns, allowing for easy extension with new transformations or processing strategies.
+- **Transformers**: Define different strategies for applying transformations, such as in parallel or one by one.
+- **Detectors**: Detect objects in images using computer vision models.
 
 ## Key Components
 
-- **`transformations.py`**: Implements the actual image transformation logic using the Pillow (PIL) library.
+- **`transformations.py`**: Applies a transformation to an image using the Pillow (PIL) library and returns a transformed PIL image copy.
 - **`transformers.py`**: Defines different strategies for applying transformations.
     - `ImageMultiProcessTransformer`: Applies transformations in parallel using a process pool, suitable for a large number of independent transformations.
-    - `ImageSequentialTransformer`: Applies transformations one by one in sequence.
+    - `ImageSequentialTransformer`: Applies transformations one by one in sequence of independent transformations.
     - `ImageChainTransformer`: Applies transformations sequentially, where the output of one transformation becomes the input for the next.
 - **`managers.py`**: Manages the overall image processing workflow.
     - `ImageLocalManager`: Manages transformations for images stored locally on the filesystem. It opens the image, applies transformations using a specified transformer, and saves the resulting images to a structured directory.
-- **`data_models.py` (within `processing/`)**: Defines internal data structures used during the transformation process, such as `InternalImageTransformationFilters` which are direct mappings to PIL's internal representations.
-- **`utils.py`**: Provides utility functions for converting between user-facing data models and internal representations.
+- **`data_models.py` (within `src/`)**: Defines internal data structures used during the transformation process, such as `InternalImageTransformationFilters` which are direct mappings to PIL's internal representations.
 
 ## How it Works (Example Flow from `apps.places.tasks.py`)
 
-The `transform_uploaded_images` task in `apps.places.tasks.py` demonstrates how this `images` app is used:
+The `transform_uploaded_images` task in `apps.places.tasks.py` demonstrates how this `image_processing` app is used:
 
 1. A list of `ImageTransformationDefinition` objects is defined, each specifying an `identifier`, a `transformation` type (e.g., `ImageTransformations.THUMBNAIL`), and optional `filters`.
 ``` python
-from apps.images.constants import (
+from apps.image_processing.api.constants import (
         ImageTransformations,
         TransformationFilterBlurFilter,
         TransformationFilterDither,
         TransformationFilterThumbnailResampling,
     )
-from apps.images.data_models import (
+from apps.image_processing.api.data_models import (
     ImageTransformationDefinition,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
@@ -73,12 +73,14 @@ transformations = [
 
 2. Use the `image_local_transform` service with the `image_path`, the list of `transformations`, and a `parent_folder` name.
 ``` python
-from images.services import image_local_transform
+from apps.image_processing.api.services import image_local_transform
 
 applied_transformations = image_local_transform(
+    user_id=request.user.id,
     image_path="path/to/local/image.png",
     transformations=transformations,
     parent_folder="parent_folder",
+    chain=True, # Defaults to False
 )
 
 for transformation in applied_transformations:
@@ -88,13 +90,13 @@ for transformation in applied_transformations:
 
 ## How It Works Inside:
 
-### Transformations (`image_processing.transformations`):
+### Transformations (`image_processing.src.transformations`):
 
 The core logic for applying custom image transformations. This includes the actual transformation logic using the Pillow (PIL) library. They take an image, apply a transformation based on the provided filters, and return a transformed PIL image copy.
 
 Make your own transformation like this:
 ```python
-from apps.images.data_models import InternalImageTransformation
+from apps.image_processing.src.data_models import InternalImageTransformation
 from PIL import Image as PImage
 
 
@@ -118,13 +120,13 @@ class TransformationCrop(InternalImageTransformation): # Inherit from InternalIm
 
 ```
 
-## Filters (`image_processing.data_models`):
+## Filters (`image_processing.src.data_models`):
 
 Defines the internal representations of image transformations. Each subclass corresponds to a specific transformation type and its associated filters.
 
 Make your own filters like this:
 ```python
-from apps.image_processing.data_models import InternalImageTransformationFilters
+from apps.image_processing.src.data_models import InternalImageTransformationFilters
 
 @dataclass
 class InternalTransformationFiltersCrop(InternalImageTransformationFilters): # Inherit from InternalImageTransformationFilters
@@ -134,15 +136,15 @@ class InternalTransformationFiltersCrop(InternalImageTransformationFilters): # I
     y_bottom: float
 ```
 
-### Transformers (`image_processing.transformers`):
+### Transformers (`image_processing.src.transformers`):
 
 Defines different strategies for applying transformations, they take a list of
 `InternalImageTransformation` wich contains the `transformation` to apply with the corresponding `filters` and the provided `identifier`.
 
 Make your own transformers like this:
 ```python
-from apps.image_processing.data_models import InternalImageTransformationResult
-from apps.image_processing.transformers import BaseImageTransformer
+from apps.image_processing.src.data_models import InternalImageTransformationResult
+from apps.image_processing.src.transformers import BaseImageTransformer
 
 from PIL import Image as PImage
 
@@ -167,7 +169,7 @@ class ImageSequentialTransformer(BaseImageTransformer):  # Inherit from BaseImag
         return transformations # Must return list[InternalImageTransformationResult]
 ```
 
-### Managers (`image_processing.managers`):
+### Managers (`image_processing.src.managers`):
 
 Manages the overall image processing workflow. It takes an image path, a list of
 transformations, and a parent folder name, and applies the transformations using
@@ -180,8 +182,8 @@ import io
 import boto3
 from PIL import Image as PImage
 
-from apps.image_processing.managers import BaseImageManager
-from apps.image_processing.data_models import InternalTransformationManagerSaveResult
+from apps.image_processing.src.managers import BaseImageManager
+from apps.image_processing.src.data_models import InternalTransformationManagerSaveResult
 
 
 class ImageS3Manager(BaseImageManager): # Inherit from BaseImageManager

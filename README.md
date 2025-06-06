@@ -48,7 +48,7 @@ We follow specific conventions to organize our Django apps for clarity and maint
 - **Specific Internal Logic**: For highly specific or internal app logic (e.g., image transformations), you can create custom files within the app's directory (e.g., `images/transformations.py`).
 
 ### Apps Conventions
-- **Shared Components**: `constants`, `services` and `tasks` are think to be accessible by other apps. Place widely used constants and reusable service functions here.
+- **Shared Components**: `constants`, `services`, `data_models` and `tasks` are think to be accessible by other apps. Place widely used constants and reusable service functions here.
 
 ### Apps Structure Disclaimer
 We can use folders to group related files/components within an app splitting the codebase into more manageable and organized sections as the project grows and complexity increases:
@@ -75,7 +75,8 @@ Once this pattern is applied in any app component we highly recommend to switch 
 - **users**: The `users` app handles user-related functionalities.
 - **api**: The `api` app centralize API routing. This app typically contains api versions that includes URL patterns from other apps, providing a single entry point for all API requests and making versioning or global API changes more manageable.
 - **common**: The `common` app is used to house highly generic and reusable code as public services that are not specific nor related to any single application but are used across the project. This promotes DRY principles and keeps app-specific logic clean.
-- **images**: The `images` app handle general image-related functionalities, such as processing, and transformations.
+- **image_processing**: The `image_processing` app handle general image-related functionalities, such as processing transformations and object detection.
+    - The `image_processing` app its meant to be extracted to a new app in the future as it will grow and become more complex, inner apps should use the `image_processing/api` interfaces that supports built-in types instead of accessing the app `src` functionalities.
 - **places**: The `places` app allows to create and handle `Places`.
     - A `Place` is a basic virtual representations of a real place with a real-world counterpart.
 
