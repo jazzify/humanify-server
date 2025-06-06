@@ -45,7 +45,7 @@ def test_place_retrieve_all_by_user_num_queries(user, django_assert_num_queries)
     place.tags.add(*tags)
     [PlaceImageFactory(place=place) for _ in range(2)]
 
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         places = place_retrieve_all_by_user(user)
         assert len(places) == 1
 
@@ -61,6 +61,7 @@ def test_place_retrieve_all_by_user_with_related_data(user):
 
     assert len(places) == 1
     assert places[0].tags.count() == 2
+    assert places[0].suggested_tags.count() == 0
     assert places[0].images.count() == 2
 
 
@@ -123,9 +124,10 @@ def test_place_create_with_tags(user):
         assert tag.user == user
 
 
+@patch("apps.places.services.suggest_tags_from_uploaded_images")
 @patch("apps.places.services.transform_uploaded_images")
 @pytest.mark.django_db
-def test_place_images_create(mock_transform_uploaded_images, user):
+def test_place_images_create(mock_transform_uploaded_images, mock_suggest_tags, user):
     place = PlaceFactory(user=user)
 
     image1 = SimpleUploadedFile(
@@ -139,7 +141,7 @@ def test_place_images_create(mock_transform_uploaded_images, user):
         content_type="image/jpeg",
     )
 
-    place_images_create(
+    created_images = place_images_create(
         user=user,
         place_id=place.id,
         images=[image1],
@@ -152,10 +154,16 @@ def test_place_images_create(mock_transform_uploaded_images, user):
         file_path=f"{settings.MEDIA_ROOT}/place_images/test_image1.jpg",
         parent_folder=str(1),
     )
+    mock_suggest_tags.enqueue.assert_called_once_with(
+        user_id=user.id,
+        place_id=place.id,
+        images={created_images[0].id: created_images[0].image.path},
+    )
 
 
+@patch("apps.places.services.suggest_tags_from_uploaded_images")
 @pytest.mark.django_db
-def test_place_images_create_exceed_limit(user):
+def test_place_images_create_exceed_limit(mocke_suggest_tags, user):
     place = PlaceFactory(user=user)
     images = [
         SimpleUploadedFile(
@@ -196,7 +204,7 @@ def test_place_images_create_invalid_place(user):
 def test_place_retrieve_by_id_and_user_success(user, django_assert_num_queries):
     place = PlaceFactory(user=user)
 
-    with django_assert_num_queries(1):
+    with django_assert_num_queries(4):
         retrieved_place = place_retrieve_by_id_and_user(place_id=place.id, user=user)
         assert retrieved_place == place
         assert retrieved_place.user == user
@@ -229,7 +237,7 @@ def test_place_delete_by_id_and_user_success(user, django_assert_num_queries):
     place = PlaceFactory(user=user)
     place_id = place.id
 
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(5):
         place_delete_by_id_and_user(place_id=place_id, user=user)
 
     with pytest.raises(Place.DoesNotExist):

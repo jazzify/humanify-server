@@ -6,7 +6,10 @@ from django.db.models import QuerySet
 
 from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
-from apps.places.tasks import transform_uploaded_images
+from apps.places.tasks import (
+    suggest_tags_from_uploaded_images,
+    transform_uploaded_images,
+)
 from apps.users.models import BaseUser
 
 logger = logging.getLogger(__name__)
@@ -17,7 +20,7 @@ def place_retrieve_all_by_user(user: BaseUser) -> QuerySet[Place]:
         Place.objects.select_related(
             "user",
         )
-        .prefetch_related("images", "tags")
+        .prefetch_related("images", "tags", "suggested_tags")
         .filter(user=user)
     )
 
@@ -53,9 +56,13 @@ def place_create(
 
 def place_retrieve_by_id_and_user(place_id: int, user: BaseUser) -> Place:
     try:
-        return Place.objects.select_related(
-            "user",
-        ).get(id=place_id, user=user)
+        return (
+            Place.objects.select_related(
+                "user",
+            )
+            .prefetch_related("images", "tags", "suggested_tags")
+            .get(id=place_id, user=user)
+        )
     except Place.DoesNotExist as e:
         raise ValidationError(
             {
@@ -96,10 +103,12 @@ def place_images_create(
             )
 
         created_place_images = []
+        images_for_detection: dict[int, str] = {}
         for image in images:
             place_image = PlaceImage(place_id=place_id, image=image)
             place_image.full_clean()
             place_image.save()
+            images_for_detection[place_image.id] = place_image.image.path
             created_place_images.append(place_image)
 
             transform_uploaded_images.enqueue(
@@ -107,6 +116,11 @@ def place_images_create(
                 file_path=place_image.image.path,
                 parent_folder=str(place_image.id),
             )
+        suggest_tags_from_uploaded_images.enqueue(
+            user_id=user.id,
+            place_id=place_id,
+            images=images_for_detection,
+        )
 
         return created_place_images
 
