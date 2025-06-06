@@ -1,7 +1,7 @@
 from collections import OrderedDict
-from typing import Any, Type
+from typing import Any, Sequence, Type
 
-from django.db.models import QuerySet
+from django.db.models import Model, QuerySet
 from drf_spectacular.utils import (
     OpenApiExample,
     extend_schema_serializer,
@@ -59,7 +59,7 @@ def get_paginated_response(
     *,
     pagination_class: Type[BasePagination],
     serializer_class: Type[BaseSerializer],
-    queryset: QuerySet[Any],
+    queryset: QuerySet[Any] | Sequence[Model],
     request: Request,
     view: APIView,
 ) -> Response:
