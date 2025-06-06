@@ -98,7 +98,7 @@ def place_images_create(
         created_place_images = []
         for image in images:
             place_image = PlaceImage(place_id=place_id, image=image)
-            place_image.full_clean
+            place_image.full_clean()
             place_image.save()
             created_place_images.append(place_image)
 

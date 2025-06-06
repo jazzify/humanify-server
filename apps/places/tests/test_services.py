@@ -188,7 +188,7 @@ def test_place_images_create_invalid_place(user):
         content=b"dummy_content",
         content_type="image/jpeg",
     )
-    with pytest.raises(ValidationError, match="Place with id"):
+    with pytest.raises(ValidationError):
         place_images_create(user=user, place_id=invalid_place_id, images=[image])
 
 
