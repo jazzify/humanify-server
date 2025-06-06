@@ -29,6 +29,7 @@ class Place(BaseModel):
     longitude = models.FloatField()
     favorite = models.BooleanField(default=False)
     tags = models.ManyToManyField(PlaceTag, related_name="places")
+    suggested_tags = models.ManyToManyField(PlaceTag, related_name="suggested_places")
 
     def __str__(self) -> str:
         return self.name

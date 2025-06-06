@@ -46,10 +46,14 @@ class PlaceImageDetailSerializer(serializers.Serializer):
 
 class PlaceSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
+    suggested_tags = serializers.SerializerMethodField()
     images = PlaceImageDetailSerializer(many=True)
 
     def get_tags(self, obj: Place) -> list[str]:
         return [tag.name for tag in obj.tags.all()]
+
+    def get_suggested_tags(self, obj: Place) -> list[str]:
+        return [tag.name for tag in obj.suggested_tags.all()]
 
     class Meta:
         model = Place
@@ -61,6 +65,7 @@ class PlaceSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
             "tags",
+            "suggested_tags",
             "images",
             "favorite",
             "description",
