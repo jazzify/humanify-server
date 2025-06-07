@@ -3,7 +3,7 @@ from typing import Any, Type
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, ValidationError
 
-from apps.image_processing.models import Image
+from apps.image_processing.models import ProcessingImage
 from apps.image_processing_api.constants import (
     ImageTransformations,
     TransformationFilterBlurFilter,
@@ -12,7 +12,7 @@ from apps.image_processing_api.constants import (
 
 class ImageProcessingModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Image
+        model = ProcessingImage
         fields = ["id", "file"]
 
 

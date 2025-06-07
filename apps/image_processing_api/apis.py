@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from apps.api.pagination import LimitOffsetPagination, get_paginated_response
 from apps.api.serializers import ValidationErrorSerializer
-from apps.image_processing.models import Image
+from apps.image_processing.models import ProcessingImage
 from apps.image_processing_api.serializers import (
     ImageProcessingCreateInputSerializer,
     ImageProcessingModelSerializer,
@@ -53,7 +53,7 @@ class ImageProcessingCreateListApi(APIView):
         # query_serializer = ImageProcessingListQuerySerializer(data=request.query_params)
         # query_serializer.is_valid(raise_exception=True)
 
-        images = Image.objects.filter(user=request.user)
+        images = ProcessingImage.objects.filter(user=request.user)
         return get_paginated_response(
             pagination_class=self.pagination_class,
             serializer_class=ImageProcessingModelSerializer,

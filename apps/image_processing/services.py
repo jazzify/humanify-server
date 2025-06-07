@@ -10,9 +10,9 @@ from apps.image_processing.data_models import (
     InternalTransformationManagerSaveResult,
 )
 from apps.image_processing.models import (
-    Image,
     ImageTransformation,
     ProcessedImage,
+    ProcessingImage,
     TransformationBatch,
 )
 from apps.image_processing.utils import (
@@ -33,11 +33,11 @@ def image_processing_save_procedure(
     transformations_applied: list[InternalImageTransformationResult],
 ) -> None:
     try:
-        image = Image.objects.select_related("user").get(
+        image = ProcessingImage.objects.select_related("user").get(
             user_id=user_id, file=image_path
         )
-    except Image.DoesNotExist:
-        image = Image.objects.create(user_id=user_id, file=image_file)
+    except ProcessingImage.DoesNotExist:
+        image = ProcessingImage.objects.create(user_id=user_id, file=image_file)
 
     transformation_batch = TransformationBatch(
         input_image=image,

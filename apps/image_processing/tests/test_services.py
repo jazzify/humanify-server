@@ -5,9 +5,9 @@ import pytest
 from apps.image_processing.core.managers import ImageLocalManager
 from apps.image_processing.data_models import InternalImageTransformationResult
 from apps.image_processing.models import (
-    Image,
     ImageTransformation,
     ProcessedImage,
+    ProcessingImage,
     TransformationBatch,
 )
 from apps.image_processing.services import (
@@ -137,8 +137,8 @@ def test_image_processing_save_procedure_integration(user, temp_image_file):
         transformations_applied=transformations_applied_results,
     )
 
-    assert Image.objects.count() == 1
-    saved_image = Image.objects.first()
+    assert ProcessingImage.objects.count() == 1
+    saved_image = ProcessingImage.objects.first()
     assert saved_image.user_id == user_id
     assert saved_image.file.name == "image_processing/api/test_image.png"
 

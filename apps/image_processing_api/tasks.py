@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 @task(queue_name="image_processing")
 def transform_uploaded_images(
     user_id: int,
-    file_path: str,
+    image_id: str,
     parent_folder: str,
     transformations: list[dict[str, Any]],
     is_chain: bool = False,
 ) -> None:
     logger.debug(
-        f"Transforming image {file_path} with transformations {transformations} for user {user_id}"
+        f"Transforming image {image_id} with transformations {transformations} for user {user_id}"
     )
 
     from apps.image_processing.services import image_local_transform
@@ -39,7 +39,7 @@ def transform_uploaded_images(
 
     applied_transformations = image_local_transform(
         user_id=user_id,
-        image_path=file_path,
+        image_path=image_id,
         transformations=transformations_to_apply,
         parent_folder=parent_folder,
         is_chain=is_chain,

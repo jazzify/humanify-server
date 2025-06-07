@@ -8,7 +8,7 @@ from apps.image_processing_api.constants import ImageTransformations
 from apps.users.models import BaseUser
 
 
-class Image(BaseModel):
+class ProcessingImage(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(BaseUser, on_delete=models.PROTECT, related_name="images")
     file = models.ImageField(upload_to="image_processing/api/")
@@ -24,7 +24,7 @@ class TransformationBatch(BaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     input_image = models.OneToOneField(
-        Image, on_delete=models.PROTECT, related_name="transformation_batches"
+        ProcessingImage, on_delete=models.PROTECT, related_name="transformation_batches"
     )
     transformer = models.CharField(max_length=100, choices=TRANSFORMER_CHOICES)
 
