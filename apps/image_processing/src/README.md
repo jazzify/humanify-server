@@ -73,7 +73,7 @@ transformations = [
 
 2. Use the `image_local_transform` service with the `image_path`, the list of `transformations`, and a `parent_folder` name.
 ``` python
-from apps.image_processing.api.services import image_local_transform
+from apps.image_processing.api.services.processing import image_local_transform
 
 applied_transformations = image_local_transform(
     user_id=request.user.id,

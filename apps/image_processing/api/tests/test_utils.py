@@ -10,7 +10,7 @@ from apps.image_processing.api.constants import (
     ImageTransformations,
 )
 from apps.image_processing.api.data_models import ImageTransformationDefinition
-from apps.image_processing.api.services import (
+from apps.image_processing.api.services.processing import (
     get_local_transformer,
 )
 from apps.image_processing.src.data_models import (

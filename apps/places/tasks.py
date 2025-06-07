@@ -19,7 +19,7 @@ def transform_uploaded_images(user_id: int, file_path: str, parent_folder: str) 
         TransformationFiltersBlur,
         TransformationFiltersThumbnail,
     )
-    from apps.image_processing.api.services import image_local_transform
+    from apps.image_processing.api.services.processing import image_local_transform
 
     logger.info(f"Transforming image {file_path}")
     transformations = [

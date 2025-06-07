@@ -8,7 +8,7 @@ from apps.image_processing.api.data_models import (
     ImageTransformationDefinition,
     TransformationFiltersThumbnail,
 )
-from apps.image_processing.api.services import (
+from apps.image_processing.api.services.processing import (
     image_local_transform,
     image_processing_save_procedure,
 )
@@ -27,7 +27,7 @@ User = get_user_model()
 @pytest.fixture
 def mock_get_transformation_dataclasses():
     with patch(
-        "apps.image_processing.api.services.get_transformation_dataclasses"
+        "apps.image_processing.api.services.processing.get_transformation_dataclasses"
     ) as mock:
         mock.return_value = [MagicMock(), MagicMock()]
         yield mock
@@ -35,7 +35,9 @@ def mock_get_transformation_dataclasses():
 
 @pytest.fixture
 def mock_get_local_transformer():
-    with patch("apps.image_processing.api.services.get_local_transformer") as mock:
+    with patch(
+        "apps.image_processing.api.services.processing.get_local_transformer"
+    ) as mock:
         mock_transformer_instance = MagicMock()
         mock.return_value = mock_transformer_instance
         yield mock
@@ -43,7 +45,9 @@ def mock_get_local_transformer():
 
 @pytest.fixture
 def mock_image_local_manager():
-    with patch("apps.image_processing.api.services.ImageLocalManager") as mock:
+    with patch(
+        "apps.image_processing.api.services.processing.ImageLocalManager"
+    ) as mock:
         mock_manager_instance = MagicMock()
         mock_manager_instance.apply_transformations = MagicMock()
         mock_manager_instance.get_file.return_value = 1
@@ -54,7 +58,7 @@ def mock_image_local_manager():
         yield mock
 
 
-@patch("apps.image_processing.api.services.image_processing_save_procedure")
+@patch("apps.image_processing.api.services.processing.image_processing_save_procedure")
 def test_image_local_transform(
     mock_image_processing_save_procedure,
     mock_get_transformation_dataclasses,
