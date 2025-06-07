@@ -1,19 +1,19 @@
 from unittest.mock import MagicMock, call, patch
 
-from apps.image_processing.src.data_models import InternalImageTransformationDefinition
-from apps.image_processing.src.transformations import (
+from apps.image_processing.core.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
     TransformationThumbnail,
 )
-from apps.image_processing.src.transformers import (
+from apps.image_processing.core.transformers import (
     ImageChainTransformer,
     ImageMultiProcessTransformer,
     ImageSequentialTransformer,
 )
+from apps.image_processing.data_models import InternalImageTransformationDefinition
 
 
-@patch("apps.image_processing.src.transformers.cfutures.ProcessPoolExecutor")
+@patch("apps.image_processing.core.transformers.cfutures.ProcessPoolExecutor")
 def test_image_multiprocess_transformer(mock_executor):
     mock_image = MagicMock()
     mock_image_copy = MagicMock()

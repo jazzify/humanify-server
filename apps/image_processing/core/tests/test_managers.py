@@ -2,7 +2,7 @@ import pytest
 from django.conf import settings
 from PIL import Image as PImage
 
-from apps.image_processing.src.managers import ImageLocalManager
+from apps.image_processing.core.managers import ImageLocalManager
 
 
 class TestImageLocalManager:

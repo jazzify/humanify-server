@@ -31,6 +31,7 @@ LOCAL_APPS = [
     "apps.users",
     "apps.places",
     "apps.image_processing",
+    "apps.image_processing_api",
 ]
 
 THIRD_PARTY_APPS = [

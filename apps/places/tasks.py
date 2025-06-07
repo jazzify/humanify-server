@@ -7,19 +7,19 @@ logger = logging.getLogger(__name__)
 
 @task(queue_name="place_images")
 def transform_uploaded_images(user_id: int, file_path: str, parent_folder: str) -> None:
-    from apps.image_processing.api.constants import (
+    from apps.image_processing.services import image_local_transform
+    from apps.image_processing_api.constants import (
         ImageTransformations,
         TransformationFilterBlurFilter,
         TransformationFilterDither,
         TransformationFilterThumbnailResampling,
     )
-    from apps.image_processing.api.data_models import (
+    from apps.image_processing_api.data_models import (
         ImageTransformationDefinition,
         TransformationFiltersBlackAndWhite,
         TransformationFiltersBlur,
         TransformationFiltersThumbnail,
     )
-    from apps.image_processing.api.services.processing import image_local_transform
 
     logger.info(f"Transforming image {file_path}")
     transformations = [
@@ -100,8 +100,8 @@ def transform_uploaded_images(user_id: int, file_path: str, parent_folder: str) 
 def suggest_tags_from_uploaded_images(
     user_id: int, place_id: int, images: dict[int, str]
 ) -> None:
-    from apps.image_processing.src.data_models import DetectorImage
-    from apps.image_processing.src.detectors import CommonObjectDetector
+    from apps.image_processing.core.detectors import CommonObjectDetector
+    from apps.image_processing.data_models import DetectorImage
     from apps.places.models import Place, PlaceTag
 
     user_place = (

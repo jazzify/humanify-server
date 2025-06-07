@@ -4,32 +4,32 @@ import pytest
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.image_processing.api import utils
-from apps.image_processing.api.constants import (
-    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
-    ImageTransformations,
+from apps.image_processing import utils
+from apps.image_processing.core.transformations import (
+    TransformationBlackAndWhite,
+    TransformationBlur,
+    TransformationThumbnail,
 )
-from apps.image_processing.api.data_models import ImageTransformationDefinition
-from apps.image_processing.api.services.processing import (
-    get_local_transformer,
+from apps.image_processing.core.transformers import (
+    ImageChainTransformer,
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
 )
-from apps.image_processing.src.data_models import (
+from apps.image_processing.data_models import (
     InternalImageTransformationDefinition,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
     InternalTransformationMapper,
 )
-from apps.image_processing.src.transformations import (
-    TransformationBlackAndWhite,
-    TransformationBlur,
-    TransformationThumbnail,
+from apps.image_processing.services import (
+    get_local_transformer,
 )
-from apps.image_processing.src.transformers import (
-    ImageChainTransformer,
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
+from apps.image_processing_api.constants import (
+    TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
+    ImageTransformations,
 )
+from apps.image_processing_api.data_models import ImageTransformationDefinition
 
 
 @pytest.mark.parametrize(

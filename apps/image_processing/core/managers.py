@@ -7,11 +7,11 @@ from django.conf import settings
 from django.core.files import File
 from PIL import Image as PImage
 
-from apps.image_processing.src.data_models import (
+from apps.image_processing.core.transformers import BaseImageTransformer
+from apps.image_processing.data_models import (
     InternalImageTransformationResult,
     InternalTransformationManagerSaveResult,
 )
-from apps.image_processing.src.transformers import BaseImageTransformer
 
 
 class BaseImageManager(ABC):

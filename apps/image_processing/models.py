@@ -3,8 +3,8 @@ import uuid
 from django.db import models
 
 from apps.common.models import BaseModel
-from apps.image_processing.api.constants import ImageTransformations
-from apps.image_processing.src.constants import InternalTransformerNames
+from apps.image_processing.constants import InternalTransformerNames
+from apps.image_processing_api.constants import ImageTransformations
 from apps.users.models import BaseUser
 
 
@@ -47,10 +47,10 @@ class ImageTransformation(BaseModel):
 
 class ProcessedImage(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    identifier = models.CharField(max_length=255)
+    identifier = models.CharField(max_length=100)
     file = models.ImageField(upload_to="image_processing/processed/")
-    transformation = models.ForeignKey(
-        ImageTransformation, on_delete=models.CASCADE, related_name="processed_images"
+    transformation = models.OneToOneField(
+        ImageTransformation, on_delete=models.PROTECT, related_name="processed_image"
     )
 
     @property

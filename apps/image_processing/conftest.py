@@ -5,12 +5,12 @@ from django.conf import settings
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.image_processing.src.data_models import (
+from apps.image_processing.core.transformations import TransformationBlur
+from apps.image_processing.core.transformers import BaseImageTransformer
+from apps.image_processing.data_models import (
     InternalImageTransformationDefinition,
     InternalImageTransformationResult,
 )
-from apps.image_processing.src.transformations import TransformationBlur
-from apps.image_processing.src.transformers import BaseImageTransformer
 
 
 @pytest.fixture

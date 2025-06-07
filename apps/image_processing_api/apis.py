@@ -8,12 +8,16 @@ from rest_framework.views import APIView
 
 from apps.api.pagination import LimitOffsetPagination, get_paginated_response
 from apps.api.serializers import ValidationErrorSerializer
-from apps.image_processing.api.api_services import image_processing_create
-from apps.image_processing.api.serializers import (
+from apps.image_processing.models import Image
+from apps.image_processing_api.serializers import (
     ImageProcessingCreateInputSerializer,
     ImageProcessingModelSerializer,
+    ImageProcessInputSerializer,
 )
-from apps.image_processing.models import Image
+from apps.image_processing_api.services import (
+    image_processing_create,
+    image_processing_transform,
+)
 
 
 class ImageProcessingCreateListApi(APIView):
@@ -57,3 +61,41 @@ class ImageProcessingCreateListApi(APIView):
             request=request,
             view=self,
         )
+
+
+class ImageProcessTransformApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Transform image",
+        request=ImageProcessInputSerializer,
+        responses={
+            status.HTTP_201_CREATED: None,
+            status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+        },
+    )
+    def post(self, request: Request) -> Response:
+        serializer = ImageProcessInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        transformations = image_processing_transform(
+            user=request.user,
+            image_ids=serializer.validated_data["images"],
+            transformations=serializer.validated_data["transformations"],
+            is_chain=serializer.validated_data["apply_chain"],
+        )
+        # transformations = image_process(serializer.validated_data)
+
+        return Response(transformations, status=status.HTTP_201_CREATED)
+
+        # created_images = image_processing_create(
+        #     user=request.user,
+        #     images=serializer.validated_data["files"],
+        # )
+        # return get_paginated_response(
+        #     pagination_class=self.pagination_class,
+        #     serializer_class=ImageProcessingModelSerializer,
+        #     queryset=created_images,
+        #     request=request,
+        #     view=self,
+        # )

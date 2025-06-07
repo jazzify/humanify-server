@@ -1,6 +1,6 @@
 from PIL import Image as PImage
 
-from apps.image_processing.src.data_models import (
+from apps.image_processing.data_models import (
     InternalImageTransformation,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,

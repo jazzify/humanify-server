@@ -1,31 +1,31 @@
 from dataclasses import asdict
 from typing import Type
 
-from apps.image_processing.api.constants import (
+from apps.image_processing.core.transformations import (
+    TransformationBlackAndWhite,
+    TransformationBlur,
+    TransformationThumbnail,
+)
+from apps.image_processing.core.transformers import (
+    BaseImageTransformer,
+    ImageChainTransformer,
+    ImageMultiProcessTransformer,
+    ImageSequentialTransformer,
+)
+from apps.image_processing.data_models import (
+    InternalImageTransformationDefinition,
+    InternalTransformationMapper,
+)
+from apps.image_processing_api.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
     ImageTransformations,
 )
-from apps.image_processing.api.data_models import (
+from apps.image_processing_api.data_models import (
     ImageTransformationDefinition,
     TransformationFilters,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
-)
-from apps.image_processing.src.data_models import (
-    InternalImageTransformationDefinition,
-    InternalTransformationMapper,
-)
-from apps.image_processing.src.transformations import (
-    TransformationBlackAndWhite,
-    TransformationBlur,
-    TransformationThumbnail,
-)
-from apps.image_processing.src.transformers import (
-    BaseImageTransformer,
-    ImageChainTransformer,
-    ImageMultiProcessTransformer,
-    ImageSequentialTransformer,
 )
 
 
@@ -91,3 +91,14 @@ def get_transformation_dataclasses(
             )
         )
     return dataclasses
+
+
+def get_filters_dataclasses_by_transformation(
+    transformation: str,
+) -> Type[TransformationFilters]:
+    filters = {
+        ImageTransformations.THUMBNAIL: TransformationFiltersThumbnail,
+        ImageTransformations.BLUR: TransformationFiltersBlur,
+        ImageTransformations.BLACK_AND_WHITE: TransformationFiltersBlackAndWhite,
+    }
+    return filters[transformation]  # type: ignore[index, return-value]

@@ -4,8 +4,8 @@ from typing import Callable, Generator
 
 from PIL import Image as PImage
 
-from apps.image_processing.src.constants import InternalTransformerNames
-from apps.image_processing.src.data_models import (
+from apps.image_processing.constants import InternalTransformerNames
+from apps.image_processing.data_models import (
     InternalImageTransformation,
     InternalImageTransformationDefinition,
     InternalImageTransformationResult,

@@ -4,10 +4,10 @@ from io import BytesIO
 
 from django.core.files import File
 
-from apps.image_processing.api.data_models import ImageTransformationDefinition
-from apps.image_processing.api.utils import (
-    get_local_transformer,
-    get_transformation_dataclasses,
+from apps.image_processing.core.managers import ImageLocalManager
+from apps.image_processing.data_models import (
+    InternalImageTransformationResult,
+    InternalTransformationManagerSaveResult,
 )
 from apps.image_processing.models import (
     Image,
@@ -15,11 +15,11 @@ from apps.image_processing.models import (
     ProcessedImage,
     TransformationBatch,
 )
-from apps.image_processing.src.data_models import (
-    InternalImageTransformationResult,
-    InternalTransformationManagerSaveResult,
+from apps.image_processing.utils import (
+    get_local_transformer,
+    get_transformation_dataclasses,
 )
-from apps.image_processing.src.managers import ImageLocalManager
+from apps.image_processing_api.data_models import ImageTransformationDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +27,18 @@ logger = logging.getLogger(__name__)
 def image_processing_save_procedure(
     user_id: int,
     image_file: File[bytes],
+    image_path: str,
     transformer: str,
     transformations: list[ImageTransformationDefinition],
     transformations_applied: list[InternalImageTransformationResult],
 ) -> None:
-    image = Image.objects.create(user_id=user_id, file=image_file)
+    try:
+        image = Image.objects.select_related("user").get(
+            user_id=user_id, file=image_path
+        )
+    except Image.DoesNotExist:
+        image = Image.objects.create(user_id=user_id, file=image_file)
+
     transformation_batch = TransformationBatch(
         input_image=image,
         transformer=transformer,
@@ -113,6 +120,7 @@ def image_local_transform(
     image_processing_save_procedure(
         user_id=user_id,
         image_file=image_manager.get_file(),
+        image_path=image_path,
         transformer=transformer.name,
         transformations=transformations,
         transformations_applied=transformations_applied,
