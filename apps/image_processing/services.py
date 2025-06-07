@@ -25,20 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 def image_processing_save_procedure(
-    user_id: int,
-    image_file: File[bytes],
-    image_path: str,
+    image: ProcessingImage,
     transformer: str,
     transformations: list[ImageTransformationDefinition],
     transformations_applied: list[InternalImageTransformationResult],
 ) -> None:
-    try:
-        image = ProcessingImage.objects.select_related("user").get(
-            user_id=user_id, file=image_path
-        )
-    except ProcessingImage.DoesNotExist:
-        image = ProcessingImage.objects.create(user_id=user_id, file=image_file)
-
     transformation_batch = TransformationBatch(
         input_image=image,
         transformer=transformer,
@@ -81,7 +72,7 @@ def image_processing_save_procedure(
 
 def image_local_transform(
     user_id: int,
-    image_path: str,
+    image_id: str,
     transformations: list[ImageTransformationDefinition],
     parent_folder: str,
     is_chain: bool = False,
@@ -96,7 +87,7 @@ def image_local_transform(
 
     Args:
         user_id (int): The user_id who is performing the transformation.
-        image_path (str): The path to the local image file to be transformed.
+        image_id (str): The identifier of the image to be transformed.
         transformations (list[ImageTransformationDefinition]): A list of
             transformation definitions to apply to the image.
         parent_folder (str): The name of the parent folder where transformed
@@ -108,19 +99,20 @@ def image_local_transform(
         list[InternalTransformationManagerSaveResult]: A list containing the
         results of the transformation, including the paths of the saved images.
     """
+    image = ProcessingImage.objects.get(id=image_id, user_id=user_id)
     transformations_data = get_transformation_dataclasses(transformations)
     transformer = get_local_transformer(
         transformations=transformations_data, is_chain=is_chain
     )
-    image_manager = ImageLocalManager(image_path, transformer=transformer)
+    image_manager = ImageLocalManager(
+        image_path=image.file.path, transformer=transformer
+    )
     transformations_applied = image_manager.apply_transformations()
     images_save = image_manager.save(
         parent_folder=parent_folder, transformations=transformations_applied
     )
     image_processing_save_procedure(
-        user_id=user_id,
-        image_file=image_manager.get_file(),
-        image_path=image_path,
+        image=image,
         transformer=transformer.name,
         transformations=transformations,
         transformations_applied=transformations_applied,

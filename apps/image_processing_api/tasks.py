@@ -39,7 +39,7 @@ def transform_uploaded_images(
 
     applied_transformations = image_local_transform(
         user_id=user_id,
-        image_path=image_id,
+        image_id=image_id,
         transformations=transformations_to_apply,
         parent_folder=parent_folder,
         is_chain=is_chain,

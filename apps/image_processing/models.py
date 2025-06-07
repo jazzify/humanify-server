@@ -23,7 +23,7 @@ class TransformationBatch(BaseModel):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    input_image = models.OneToOneField(
+    input_image = models.ForeignKey(
         ProcessingImage, on_delete=models.PROTECT, related_name="transformation_batches"
     )
     transformer = models.CharField(max_length=100, choices=TRANSFORMER_CHOICES)
