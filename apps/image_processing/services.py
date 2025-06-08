@@ -1,19 +1,11 @@
 import logging
-from dataclasses import asdict
-from io import BytesIO
-
-from django.core.files import File
 
 from apps.image_processing.core.managers import ImageLocalManager
 from apps.image_processing.data_models import (
-    InternalImageTransformationResult,
     InternalTransformationManagerSaveResult,
 )
 from apps.image_processing.models import (
-    ImageTransformation,
-    ProcessedImage,
     ProcessingImage,
-    TransformationBatch,
 )
 from apps.image_processing.utils import (
     get_local_transformer,
@@ -22,52 +14,6 @@ from apps.image_processing.utils import (
 from apps.image_processing_api.data_models import ImageTransformationDefinition
 
 logger = logging.getLogger(__name__)
-
-
-def image_processing_save_procedure(
-    image: ProcessingImage,
-    transformer: str,
-    transformations: list[ImageTransformationDefinition],
-    transformations_applied: list[InternalImageTransformationResult],
-) -> None:
-    transformation_batch = TransformationBatch(
-        input_image=image,
-        transformer=transformer,
-    )
-    transformation_batch.full_clean()
-    transformation_batch.save()
-
-    image_transformations = []
-    for transformation in transformations:
-        filters = asdict(transformation.filters) if transformation.filters else None
-        image_transformations.append(
-            ImageTransformation(
-                identifier=transformation.identifier,
-                transformation=transformation.transformation,
-                filters=filters,
-                batch=transformation_batch,
-            )
-        )
-    ImageTransformation.objects.bulk_create(image_transformations)
-
-    image_transformations_dict = {
-        transformation.identifier: transformation
-        for transformation in image_transformations
-    }
-    processed_images = []
-    for transformation_applied in transformations_applied:
-        bytes_image = BytesIO(transformation_applied.image.tobytes())
-        bytes_image.seek(0)
-        processed_images.append(
-            ProcessedImage(
-                identifier=transformation_applied.identifier,
-                file=File(bytes_image, name=f"{transformation_applied.identifier}.png"),
-                transformation=image_transformations_dict[
-                    transformation_applied.identifier
-                ],
-            )
-        )
-    ProcessedImage.objects.bulk_create(processed_images)
 
 
 def image_local_transform(
@@ -104,17 +50,9 @@ def image_local_transform(
     transformer = get_local_transformer(
         transformations=transformations_data, is_chain=is_chain
     )
-    image_manager = ImageLocalManager(
-        image_path=image.file.path, transformer=transformer
-    )
+    image_manager = ImageLocalManager(image=image, transformer=transformer)
     transformations_applied = image_manager.apply_transformations()
     images_save = image_manager.save(
         parent_folder=parent_folder, transformations=transformations_applied
-    )
-    image_processing_save_procedure(
-        image=image,
-        transformer=transformer.name,
-        transformations=transformations,
-        transformations_applied=transformations_applied,
     )
     return images_save

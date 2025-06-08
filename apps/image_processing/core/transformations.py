@@ -9,6 +9,8 @@ from apps.image_processing.data_models import (
 
 
 class TransformationThumbnail(InternalImageTransformation):
+    name = "thumbnail"
+
     def _image_transform(
         self,
         image: PImage.Image,
@@ -24,6 +26,8 @@ class TransformationThumbnail(InternalImageTransformation):
 
 
 class TransformationBlur(InternalImageTransformation):
+    name = "blur"
+
     def _image_transform(
         self, image: PImage.Image, filters: InternalTransformationFiltersBlur
     ) -> PImage.Image:
@@ -32,6 +36,8 @@ class TransformationBlur(InternalImageTransformation):
 
 
 class TransformationBlackAndWhite(InternalImageTransformation):
+    name = "black_and_white"
+
     def _image_transform(
         self, image: PImage.Image, filters: InternalTransformationFiltersBlackAndWhite
     ) -> PImage.Image:

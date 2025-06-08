@@ -15,6 +15,7 @@ from apps.image_processing.core.transformers import (
 from apps.image_processing.data_models import (
     InternalImageTransformationDefinition,
     InternalTransformationMapper,
+    TransformationFilters,
 )
 from apps.image_processing_api.constants import (
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
@@ -22,7 +23,6 @@ from apps.image_processing_api.constants import (
 )
 from apps.image_processing_api.data_models import (
     ImageTransformationDefinition,
-    TransformationFilters,
     TransformationFiltersBlackAndWhite,
     TransformationFiltersBlur,
     TransformationFiltersThumbnail,
@@ -58,7 +58,7 @@ def transformations_mapper(
     return InternalTransformationMapper(
         # TODO: search for a better way to handle typing here?
         transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
-        filters=transformation_map["filters"](**dict_filters).to_internal(),
+        filters=transformation_map["filters"](**dict_filters),
     )
 
 

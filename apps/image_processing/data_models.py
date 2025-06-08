@@ -26,6 +26,8 @@ class InternalImageTransformation(ABC):
         the concrete implementation of the transformation.
     """
 
+    name: str
+
     def __init__(
         self,
         image: PImage.Image,
@@ -58,6 +60,12 @@ class InternalImageTransformation(ABC):
 
 
 @dataclass
+class TransformationFilters(ABC):
+    @abstractmethod
+    def to_internal(self) -> InternalImageTransformationFilters: ...
+
+
+@dataclass
 class InternalTransformationFiltersThumbnail(InternalImageTransformationFilters):
     size: tuple[float, float]
     resample: PImage.Resampling
@@ -71,7 +79,7 @@ class InternalTransformationFiltersBlur(InternalImageTransformationFilters):
 
 @dataclass
 class InternalTransformationFiltersBlackAndWhite(InternalImageTransformationFilters):
-    mode: Literal["1"] = field(init=False, default="1")
+    mode: Literal["L"] = field(init=False, default="L")
     dither: PImage.Dither | None
 
 
@@ -79,7 +87,7 @@ class InternalTransformationFiltersBlackAndWhite(InternalImageTransformationFilt
 class InternalImageTransformationDefinition:
     identifier: str
     transformation: Type[InternalImageTransformation]
-    filters: InternalImageTransformationFilters
+    filters: TransformationFilters
 
 
 @dataclass
@@ -97,7 +105,7 @@ class InternalTransformationManagerSaveResult:
 @dataclass
 class InternalTransformationMapper:
     transformation: Type[InternalImageTransformation]
-    filters: InternalImageTransformationFilters
+    filters: TransformationFilters
 
 
 @dataclass

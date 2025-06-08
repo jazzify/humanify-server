@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -6,10 +5,10 @@ from PIL import Image as PImage
 from PIL import ImageFilter
 
 from apps.image_processing.data_models import (
-    InternalImageTransformationFilters,
     InternalTransformationFiltersBlackAndWhite,
     InternalTransformationFiltersBlur,
     InternalTransformationFiltersThumbnail,
+    TransformationFilters,
 )
 from apps.image_processing_api.constants import (
     ImageTransformations,
@@ -17,12 +16,6 @@ from apps.image_processing_api.constants import (
     TransformationFilterDither,
     TransformationFilterThumbnailResampling,
 )
-
-
-@dataclass
-class TransformationFilters(ABC):
-    @abstractmethod
-    def to_internal(self) -> InternalImageTransformationFilters: ...
 
 
 @dataclass

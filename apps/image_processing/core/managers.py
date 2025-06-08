@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
-from io import BytesIO
 from pathlib import Path
 
 from django.conf import settings
-from django.core.files import File
 from PIL import Image as PImage
 
 from apps.image_processing.core.transformers import BaseImageTransformer
@@ -12,17 +9,18 @@ from apps.image_processing.data_models import (
     InternalImageTransformationResult,
     InternalTransformationManagerSaveResult,
 )
+from apps.image_processing.models import ProcessingImage, TransformationBatch
 
 
 class BaseImageManager(ABC):
     def __init__(
-        self, image_path: str, transformer: BaseImageTransformer | None = None
+        self, image: ProcessingImage, transformer: BaseImageTransformer | None = None
     ) -> None:
         """
         Initializes a BaseImageManager instance.
 
         Args:
-            image_path (str): The path of the image to be processed.
+            image (ProcessingImage): The path of the image to be processed.
             transformer (BaseImageTransformer | None, optional): The transformer
                 to be used to apply transformations to the image. Defaults to None.
         Attributes:
@@ -34,7 +32,7 @@ class BaseImageManager(ABC):
             _opened_image (PIL.Image.Image): The opened image that has been processed
                 by the transformers.
         """
-        self.image_path = image_path
+        self.image = image
         self.transformer = transformer
         self._opened_image: PImage.Image = self._get_image()
 
@@ -53,13 +51,18 @@ class BaseImageManager(ABC):
         if not self.transformer:
             raise NotImplementedError("No transformer set")
 
-        return self.transformer.transform(image=self._opened_image)
+        transformation_batch = TransformationBatch(
+            input_image=self.image,
+            transformer=self.transformer.name,
+        )
+        transformation_batch.full_clean()
+        transformation_batch.save()
 
-    def get_file(self) -> File[bytes]:
-        file_name = self.image_path.split("/")[-1]
-        bytes_image = BytesIO(self.get_image().tobytes())
-        bytes_image.seek(0)
-        return File(bytes_image, name=file_name)
+        transformations = self.transformer.transform(
+            image=self._opened_image, transformation_batch=transformation_batch
+        )
+
+        return transformations
 
     def get_image(self) -> PImage.Image:
         """
@@ -103,7 +106,8 @@ class BaseImageManager(ABC):
 
 class ImageLocalManager(BaseImageManager):
     def _get_image(self) -> PImage.Image:
-        return PImage.open(self.image_path)
+        image_path = self.image.file.path
+        return PImage.open(image_path)
 
     def save(
         self,
@@ -112,17 +116,15 @@ class ImageLocalManager(BaseImageManager):
     ) -> list[InternalTransformationManagerSaveResult]:
         saved_images = []
         if len(transformations):
-            path_default = f"{settings.MEDIA_ROOT}/processed/{parent_folder}"
+            path_default = f"{settings.MEDIA_ROOT}/image_processing/processed"
+            Path(path_default).mkdir(parents=True, exist_ok=True)
 
             for transformation in transformations:
-                path_id = f"{path_default}/{transformation.identifier}"
-                Path(path_id).mkdir(parents=True, exist_ok=True)
-
-                final_path = f"{path_id}/{datetime.now().timestamp()}.png"
-                transformation.image.save(final_path, "PNG")
+                path_id = f"{path_default}/{transformation.identifier}.png"
+                transformation.image.save(path_id, "PNG")
                 saved_images.append(
                     InternalTransformationManagerSaveResult(
-                        identifier=transformation.identifier, path=final_path
+                        identifier=transformation.identifier, path=path_id
                     )
                 )
         return saved_images

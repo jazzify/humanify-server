@@ -84,7 +84,6 @@ class ImageProcessTransformApi(APIView):
             transformations=serializer.validated_data["transformations"],
             is_chain=serializer.validated_data["apply_chain"],
         )
-        # transformations = image_process(serializer.validated_data)
 
         return Response(transformations, status=status.HTTP_201_CREATED)
 
