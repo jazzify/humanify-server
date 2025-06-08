@@ -29,7 +29,7 @@ from apps.image_processing_api.constants import (
     IMAGE_TRANSFORMATION_NAMES,
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
 )
-from apps.image_processing_api.data_models import ImageTransformationDefinition
+from apps.image_processing_api.data_models import ExternalImageTransformationDefinition
 
 
 @pytest.mark.parametrize(
@@ -84,7 +84,7 @@ def test_get_transformation_dataclasses_empty():
 
 def test_get_transformation_dataclasses_callable_mock():
     mock_transformation_data = [
-        ImageTransformationDefinition(
+        ExternalImageTransformationDefinition(
             identifier="test1",
             transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=None,

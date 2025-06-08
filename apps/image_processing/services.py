@@ -2,6 +2,7 @@ import logging
 
 from apps.image_processing.core.managers.local import ImageLocalManager
 from apps.image_processing.core.transformers.base import (
+    ExternalImageTransformationDefinition,
     InternalImageTransformationResult,
 )
 from apps.image_processing.models import (
@@ -11,7 +12,6 @@ from apps.image_processing.utils import (
     get_local_transformer,
     get_transformation_dataclasses,
 )
-from apps.image_processing_api.data_models import ImageTransformationDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 def image_local_transform(
     user_id: int,
     image_id: str,
-    transformations: list[ImageTransformationDefinition],
-    parent_folder: str,
+    transformations: list[ExternalImageTransformationDefinition],
     is_chain: bool = False,
 ) -> list[InternalImageTransformationResult]:  # TODO: return model structure
     """

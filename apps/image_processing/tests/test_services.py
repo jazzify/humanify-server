@@ -16,7 +16,7 @@ from apps.image_processing.services import (
 )
 from apps.image_processing_api.constants import IMAGE_TRANSFORMATION_NAMES
 from apps.image_processing_api.data_models import (
-    ImageTransformationDefinition,
+    ExternalImageTransformationDefinition,
     TransformationFiltersThumbnail,
 )
 
@@ -59,7 +59,7 @@ def test_image_local_transform(
     user_id = 1
     image_path = "/fake/image.jpg"
     transformations = [
-        ImageTransformationDefinition(
+        ExternalImageTransformationDefinition(
             identifier="test_thumb",
             transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(100, 100)),
@@ -104,12 +104,12 @@ def test_image_processing_save_procedure_integration(user, temp_image_file):
 
     transformer_name = "chain"
     transformations_defs = [
-        ImageTransformationDefinition(
+        ExternalImageTransformationDefinition(
             identifier="thumb_integration",
             transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(100, 100)),
         ),
-        ImageTransformationDefinition(
+        ExternalImageTransformationDefinition(
             identifier="resize_integration",
             transformation=IMAGE_TRANSFORMATION_NAMES.BLUR,
         ),

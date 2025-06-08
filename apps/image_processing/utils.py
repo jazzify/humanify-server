@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from typing import Type
+from typing import Any, Type
 
 from apps.image_processing.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
 from apps.image_processing.core.transformations.base import (
@@ -20,6 +20,7 @@ from apps.image_processing.core.transformations.thumbnail import (
 )
 from apps.image_processing.core.transformers.base import (
     BaseImageTransformer,
+    ExternalImageTransformationDefinition,
     InternalImageTransformationDefinition,
 )
 from apps.image_processing.core.transformers.chain import ImageChainTransformer
@@ -30,7 +31,6 @@ from apps.image_processing.core.transformers.sequential import (
     ImageSequentialTransformer,
 )
 from apps.image_processing.models import ImageTransformation
-from apps.image_processing_api.data_models import ImageTransformationDefinition
 
 
 @dataclass
@@ -73,7 +73,7 @@ def transformations_mapper(
 
 
 def get_transformation_dataclasses(
-    transformations: list[ImageTransformationDefinition],
+    transformations: list[ExternalImageTransformationDefinition],
 ) -> list[InternalImageTransformationDefinition]:
     dataclasses = []
     for transform in transformations:

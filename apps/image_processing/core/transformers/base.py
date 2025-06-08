@@ -19,6 +19,13 @@ class InternalImageTransformationDefinition:
 
 
 @dataclass
+class ExternalImageTransformationDefinition:
+    identifier: str
+    transformation: str
+    filters: ExternalTransformationFilters | None = None
+
+
+@dataclass
 class InternalImageTransformationResult:
     identifier: str
     image: PImage.Image
