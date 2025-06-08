@@ -3,8 +3,6 @@ import uuid
 from django.db import models
 
 from apps.common.models import BaseModel
-from apps.image_processing.constants import InternalTransformerNames
-from apps.image_processing_api.constants import ImageTransformations
 from apps.users.models import BaseUser
 
 
@@ -18,9 +16,14 @@ class ProcessingImage(BaseModel):
 
 
 class TransformationBatch(BaseModel):
-    TRANSFORMER_CHOICES = [
-        (name.value, name.value) for name in InternalTransformerNames
-    ]
+    MULTIPROCESS = "multiprocess"
+    SEQUENTIAL = "sequential"
+    CHAIN = "chain"
+    TRANSFORMER_CHOICES = {
+        MULTIPROCESS: MULTIPROCESS,
+        SEQUENTIAL: SEQUENTIAL,
+        CHAIN: CHAIN,
+    }
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     input_image = models.ForeignKey(
@@ -30,9 +33,14 @@ class TransformationBatch(BaseModel):
 
 
 class ImageTransformation(BaseModel):
-    IMAGE_TRANSFORMATION_CHOICES = [
-        (name.value, name.value) for name in ImageTransformations
-    ]
+    THUMBNAIL = "thumbnail"
+    BLUR = "blur"
+    BLACK_AND_WHITE = "black_and_white"
+    IMAGE_TRANSFORMATION_CHOICES = {
+        THUMBNAIL: THUMBNAIL,
+        BLUR: BLUR,
+        BLACK_AND_WHITE: BLACK_AND_WHITE,
+    }
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     identifier = models.CharField(max_length=100)

@@ -14,7 +14,7 @@ from apps.image_processing.services import (
     image_local_transform,
     image_processing_save_procedure,
 )
-from apps.image_processing_api.constants import ImageTransformations
+from apps.image_processing_api.constants import IMAGE_TRANSFORMATION_NAMES
 from apps.image_processing_api.data_models import (
     ImageTransformationDefinition,
     TransformationFiltersThumbnail,
@@ -61,7 +61,7 @@ def test_image_local_transform(
     transformations = [
         ImageTransformationDefinition(
             identifier="test_thumb",
-            transformation=ImageTransformations.THUMBNAIL,
+            transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(100, 100)),
         )
     ]
@@ -106,12 +106,12 @@ def test_image_processing_save_procedure_integration(user, temp_image_file):
     transformations_defs = [
         ImageTransformationDefinition(
             identifier="thumb_integration",
-            transformation=ImageTransformations.THUMBNAIL,
+            transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=TransformationFiltersThumbnail(size=(100, 100)),
         ),
         ImageTransformationDefinition(
             identifier="resize_integration",
-            transformation=ImageTransformations.BLUR,
+            transformation=IMAGE_TRANSFORMATION_NAMES.BLUR,
         ),
     ]
     mock_applied_image_data = MagicMock()
@@ -150,12 +150,12 @@ def test_image_processing_save_procedure_integration(user, temp_image_file):
     assert ImageTransformation.objects.count() == 2
     db_transformations = ImageTransformation.objects.order_by("identifier")
     assert db_transformations[0].identifier == "resize_integration"
-    assert db_transformations[0].transformation == ImageTransformations.BLUR
+    assert db_transformations[0].transformation == IMAGE_TRANSFORMATION_NAMES.BLUR
     assert db_transformations[0].filters == None
     assert db_transformations[0].batch == saved_batch
 
     assert db_transformations[1].identifier == "thumb_integration"
-    assert db_transformations[1].transformation == ImageTransformations.THUMBNAIL
+    assert db_transformations[1].transformation == IMAGE_TRANSFORMATION_NAMES.THUMBNAIL
     assert db_transformations[1].filters == {
         "size": [100, 100],
         "reducing_gap": 2,

@@ -4,7 +4,6 @@ import pytest
 from PIL import Image as PImage
 from PIL import ImageFilter
 
-from apps.image_processing import utils
 from apps.image_processing.core.transformations import (
     TransformationBlackAndWhite,
     TransformationBlur,
@@ -25,9 +24,10 @@ from apps.image_processing.data_models import (
 from apps.image_processing.services import (
     get_local_transformer,
 )
+from apps.image_processing_api import utils
 from apps.image_processing_api.constants import (
+    IMAGE_TRANSFORMATION_NAMES,
     TRANSFORMATIONS_MULTIPROCESS_TRESHOLD,
-    ImageTransformations,
 )
 from apps.image_processing_api.data_models import ImageTransformationDefinition
 
@@ -36,7 +36,7 @@ from apps.image_processing_api.data_models import ImageTransformationDefinition
     "transformation, expected_callable",
     [
         (
-            ImageTransformations.THUMBNAIL,
+            IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             InternalTransformationMapper(
                 transformation=TransformationThumbnail,
                 filters=InternalTransformationFiltersThumbnail(
@@ -45,14 +45,14 @@ from apps.image_processing_api.data_models import ImageTransformationDefinition
             ),
         ),
         (
-            ImageTransformations.BLUR,
+            IMAGE_TRANSFORMATION_NAMES.BLUR,
             InternalTransformationMapper(
                 transformation=TransformationBlur,
                 filters=InternalTransformationFiltersBlur(filter=ImageFilter.BLUR()),
             ),
         ),
         (
-            ImageTransformations.BLACK_AND_WHITE,
+            IMAGE_TRANSFORMATION_NAMES.BLACK_AND_WHITE,
             InternalTransformationMapper(
                 transformation=TransformationBlackAndWhite,
                 filters=InternalTransformationFiltersBlackAndWhite(
@@ -65,7 +65,7 @@ from apps.image_processing_api.data_models import ImageTransformationDefinition
 def test_transformations_mapper(transformation, expected_callable):
     mapper = utils.transformations_mapper(transformation)
 
-    if transformation == ImageTransformations.BLUR:
+    if transformation == IMAGE_TRANSFORMATION_NAMES.BLUR:
         assert mapper.transformation == expected_callable.transformation
         assert isinstance(mapper.filters, expected_callable.filters.__class__)
     else:
@@ -86,7 +86,7 @@ def test_get_transformation_dataclasses_callable_mock():
     mock_transformation_data = [
         ImageTransformationDefinition(
             identifier="test1",
-            transformation=ImageTransformations.THUMBNAIL,
+            transformation=IMAGE_TRANSFORMATION_NAMES.THUMBNAIL,
             filters=None,
         )
     ]

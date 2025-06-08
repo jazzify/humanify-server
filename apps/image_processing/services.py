@@ -1,8 +1,8 @@
 import logging
 
-from apps.image_processing.core.managers import ImageLocalManager
-from apps.image_processing.data_models import (
-    InternalTransformationManagerSaveResult,
+from apps.image_processing.core.managers.local import ImageLocalManager
+from apps.image_processing.core.transformers.base import (
+    InternalImageTransformationResult,
 )
 from apps.image_processing.models import (
     ProcessingImage,
@@ -22,7 +22,7 @@ def image_local_transform(
     transformations: list[ImageTransformationDefinition],
     parent_folder: str,
     is_chain: bool = False,
-) -> list[InternalTransformationManagerSaveResult]:
+) -> list[InternalImageTransformationResult]:  # TODO: return model structure
     """
     Transforms a local image using specified transformations and saves the results.
 
@@ -52,7 +52,4 @@ def image_local_transform(
     )
     image_manager = ImageLocalManager(image=image, transformer=transformer)
     transformations_applied = image_manager.apply_transformations()
-    images_save = image_manager.save(
-        parent_folder=parent_folder, transformations=transformations_applied
-    )
-    return images_save
+    return transformations_applied

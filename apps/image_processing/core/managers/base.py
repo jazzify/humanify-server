@@ -1,15 +1,19 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
+from dataclasses import dataclass
 
-from django.conf import settings
 from PIL import Image as PImage
 
-from apps.image_processing.core.transformers import BaseImageTransformer
-from apps.image_processing.data_models import (
+from apps.image_processing.core.transformers.base import (
+    BaseImageTransformer,
     InternalImageTransformationResult,
-    InternalTransformationManagerSaveResult,
 )
 from apps.image_processing.models import ProcessingImage, TransformationBatch
+
+
+@dataclass
+class InternalTransformationManagerSaveResult:
+    identifier: str
+    path: str
 
 
 class BaseImageManager(ABC):
@@ -24,7 +28,7 @@ class BaseImageManager(ABC):
             transformer (BaseImageTransformer | None, optional): The transformer
                 to be used to apply transformations to the image. Defaults to None.
         Attributes:
-            image_path (str): The path of the image to be processed.
+            image (ProcessingImage): The path of the image to be processed.
             transformer (BaseImageTransformer | None): The transformer to be used
                 to apply transformations to the image.
             _transformations_applied (list[InternalImageTransformationResult]): The list
@@ -81,50 +85,3 @@ class BaseImageManager(ABC):
         Returns:
             PImage.Image: The opened image.
         """
-
-    @abstractmethod
-    def save(
-        self,
-        parent_folder: str,
-        transformations: list[InternalImageTransformationResult],
-    ) -> list[InternalTransformationManagerSaveResult]:
-        """
-        Saves the transformed images.
-
-        The transformed images are saved under the specified parent folder.
-        The function returns a dictionary with the paths of the saved images.
-
-        Args:
-            parent_folder (str): The name of the parent folder where the images
-                will be saved.
-
-        Returns:
-            list[InternalTransformationManagerSaveResult]: A dictionary with {transformer_identifier and paths of the saved images.
-        """
-        ...
-
-
-class ImageLocalManager(BaseImageManager):
-    def _get_image(self) -> PImage.Image:
-        image_path = self.image.file.path
-        return PImage.open(image_path)
-
-    def save(
-        self,
-        parent_folder: str,
-        transformations: list[InternalImageTransformationResult],
-    ) -> list[InternalTransformationManagerSaveResult]:
-        saved_images = []
-        if len(transformations):
-            path_default = f"{settings.MEDIA_ROOT}/image_processing/processed"
-            Path(path_default).mkdir(parents=True, exist_ok=True)
-
-            for transformation in transformations:
-                path_id = f"{path_default}/{transformation.identifier}.png"
-                transformation.image.save(path_id, "PNG")
-                saved_images.append(
-                    InternalTransformationManagerSaveResult(
-                        identifier=transformation.identifier, path=path_id
-                    )
-                )
-        return saved_images

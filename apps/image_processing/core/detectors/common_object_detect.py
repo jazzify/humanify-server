@@ -2,7 +2,7 @@ from typing import Generator, Sequence
 
 from ultralytics import YOLO
 
-from apps.image_processing.data_models import (
+from .base import (
     DetectorImage,
     DetectorObjectResult,
     DetectorResult,
