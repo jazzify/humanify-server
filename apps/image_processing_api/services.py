@@ -30,7 +30,6 @@ def image_processing_transform(
         task = transform_uploaded_images.enqueue(
             user_id=user.id,
             image_id=str(image.id),
-            parent_folder=str(image.id),
             transformations=transformations,
             is_chain=is_chain,
         )

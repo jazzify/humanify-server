@@ -3,11 +3,10 @@ from typing import Any, Type
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, ValidationError
 
-from apps.image_processing.models import ProcessingImage
-from apps.image_processing_api.constants import (
-    ImageTransformations,
-    TransformationFilterBlurFilter,
+from apps.image_processing.constants import (
+    TRANSFORMATION_FILTER_BLUR_FILTER,
 )
+from apps.image_processing.models import ImageTransformation, ProcessingImage
 
 
 class ImageProcessingModelSerializer(serializers.ModelSerializer):
@@ -31,7 +30,7 @@ class ImageFilterSerializer(serializers.Serializer):
 
 class BlurFilterSerializer(ImageFilterSerializer):
     filter = serializers.ChoiceField(
-        choices=[name.value for name in TransformationFilterBlurFilter]
+        choices=[name.value for name in TRANSFORMATION_FILTER_BLUR_FILTER]
     )
     radius = serializers.FloatField(required=False)
 
@@ -39,14 +38,14 @@ class BlurFilterSerializer(ImageFilterSerializer):
 class ImageTransformationSerializer(serializers.Serializer):
     identifier = serializers.CharField(max_length=100)
     transformation = serializers.ChoiceField(
-        choices=[name.value for name in ImageTransformations]
+        choices=list(ImageTransformation.IMAGE_TRANSFORMATION_CHOICES.keys())
     )
     filters = serializers.DictField(required=False)
 
     def _get_filter_serializer(
         self, transformation: str
     ) -> Type[ImageFilterSerializer]:
-        if transformation == ImageTransformations.BLUR:
+        if transformation == ImageTransformation.BLUR:
             return BlurFilterSerializer
         raise ParseError(
             f"Filters not yet supported for transformation: {transformation}"
