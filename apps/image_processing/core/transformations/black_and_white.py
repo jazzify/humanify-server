@@ -21,12 +21,13 @@ class InternalTransformationFiltersBlackAndWhite(InternalImageTransformationFilt
 
 @dataclass
 class ExternalTransformationFiltersBlackAndWhite(ExternalTransformationFilters):
-    dither: TRANSFORMATION_FILTER_DITHER = TRANSFORMATION_FILTER_DITHER.FLOYDSTEINBERG
+    dither: TRANSFORMATION_FILTER_DITHER | None = (
+        TRANSFORMATION_FILTER_DITHER.FLOYDSTEINBERG
+    )
 
     def to_internal(self) -> InternalTransformationFiltersBlackAndWhite:
-        return InternalTransformationFiltersBlackAndWhite(
-            dither=PImage.Dither[self.dither.name]
-        )
+        _dither = PImage.Dither[self.dither.name] if self.dither else None
+        return InternalTransformationFiltersBlackAndWhite(dither=_dither)
 
 
 class TransformationBlackAndWhite(InternalImageTransformation):
