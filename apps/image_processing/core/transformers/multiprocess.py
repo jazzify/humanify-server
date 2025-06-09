@@ -1,21 +1,17 @@
 from concurrent import futures as cfutures
-from dataclasses import asdict
-from io import BytesIO
 from typing import Callable
 
-from django.core.files.base import ContentFile
 from PIL import Image as PImage
 
-from apps.image_processing.core.transformations.base import InternalImageTransformation
+from apps.image_processing.core.transformations.base import (
+    ExternalTransformationFilters,
+    InternalImageTransformation,
+)
 from apps.image_processing.core.transformers.base import (
     InternalImageTransformationDefinition,
     InternalImageTransformationResult,
 )
-from apps.image_processing.models import (
-    ImageTransformation,
-    ProcessedImage,
-    TransformationBatch,
-)
+from apps.image_processing.models import TransformationBatch
 
 from .base import BaseImageTransformer
 
@@ -30,28 +26,23 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
         self._transformations_applied: list[InternalImageTransformationResult] = []
 
     def _callback_process(
-        self, identifier: str, transformation: ImageTransformation
+        self, identifier: str, filters: ExternalTransformationFilters
     ) -> Callable[[cfutures.Future[InternalImageTransformation]], None]:
         def callback(future: cfutures.Future[InternalImageTransformation]) -> None:
             transformed_image = future.result().image_transformed
             self._transformations_applied.append(
                 InternalImageTransformationResult(
-                    identifier=identifier, image=transformed_image
+                    identifier=identifier,
+                    image=transformed_image,
+                    transformation_name=future.result().name,
+                    applied_filters=filters,
                 )
             )
-            buffer = BytesIO()
-            transformed_image.save(buffer, format="png")
-            processed = ProcessedImage(
-                identifier=identifier,
-                file=ContentFile(buffer.getvalue(), name=f"{identifier}.png"),
-                transformation=transformation,
-            )
-            processed.save()
 
         return callback
 
-    def transform(
-        self, image: PImage.Image, transformation_batch: TransformationBatch
+    def _transform(
+        self, image: PImage.Image
     ) -> list[InternalImageTransformationResult]:
         with cfutures.ProcessPoolExecutor() as executor:
             for transform_data in self.transformations_data:
@@ -61,15 +52,10 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
                     image_copy,
                     transform_data.filters,
                 )
-                image_transformation = ImageTransformation.objects.create(
-                    identifier=transform_data.identifier,
-                    transformation=transform_data.transformation.name,
-                    filters=asdict(transform_data.filters),
-                    batch=transformation_batch,
-                )
                 future.add_done_callback(
                     self._callback_process(
-                        transform_data.identifier, image_transformation
+                        transform_data.identifier,
+                        transform_data.filters,
                     )
                 )
         return self._transformations_applied

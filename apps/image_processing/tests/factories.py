@@ -3,14 +3,14 @@ from django.core.files.base import ContentFile
 from factory.django import DjangoModelFactory
 
 from apps.common.tests import faker
-from apps.image_processing.models import ProcessingImage
+from apps.image_processing.models import ProcessingImage, TransformationBatch
 from apps.users.tests.factories import BaseUserFactory
 
 
 class ProcessingImageFactory(DjangoModelFactory):
     class Meta:
         model = ProcessingImage
-        # skip_postgeneration_save = True
+        skip_postgeneration_save = True
 
     user = factory.SubFactory(BaseUserFactory)
 
@@ -21,3 +21,11 @@ class ProcessingImageFactory(DjangoModelFactory):
             content=b"0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff,0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0, 0xff, 0xff, 0xf0",
         )
         return img_content
+
+
+class TransformationBatchFactory(DjangoModelFactory):
+    class Meta:
+        model = TransformationBatch
+        skip_postgeneration_save = True
+
+    input_image = factory.SubFactory(ProcessingImageFactory)

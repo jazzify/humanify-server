@@ -1,20 +1,12 @@
-from dataclasses import asdict
-from io import BytesIO
 from typing import Generator
-from uuid import UUID
 
-from django.core.files.base import ContentFile
 from PIL import Image as PImage
 
 from apps.image_processing.core.transformers.base import (
     InternalImageTransformationDefinition,
     InternalImageTransformationResult,
 )
-from apps.image_processing.models import (
-    ImageTransformation,
-    ProcessedImage,
-    TransformationBatch,
-)
+from apps.image_processing.models import TransformationBatch
 
 from .base import BaseImageTransformer
 
@@ -22,31 +14,15 @@ from .base import BaseImageTransformer
 class ImageChainTransformer(BaseImageTransformer):
     name = TransformationBatch.CHAIN
 
-    def _transform(
+    def _internal_transform(
         self,
         image: PImage.Image,
         transformations: list[InternalImageTransformationDefinition],
-        batch_id: UUID,
     ) -> Generator[PImage.Image]:
         if len(transformations) == 1:
-            image_transformation = ImageTransformation.objects.create(
-                identifier=transformations[0].identifier,
-                transformation=transformations[0].transformation.name,
-                filters=asdict(transformations[0].filters),
-                batch_id=batch_id,
-            )
             transformation = transformations[0].transformation(
                 image,
                 transformations[0].filters,
-            )
-            buffer = BytesIO()
-            transformation.image_transformed.save(buffer, format="png")
-            ProcessedImage.objects.create(
-                identifier=transformations[0].identifier,
-                file=ContentFile(
-                    buffer.getvalue(), name=f"{transformations[0].identifier}.png"
-                ),
-                transformation=image_transformation,
             )
             yield transformation.image_transformed
 
@@ -55,29 +31,13 @@ class ImageChainTransformer(BaseImageTransformer):
                 image,
                 transform_data.filters,
             )
-            image_transformation = ImageTransformation.objects.create(
-                identifier=transform_data.identifier,
-                transformation=transform_data.transformation.name,
-                filters=asdict(transform_data.filters),
-                batch_id=batch_id,
-            )
-            buffer = BytesIO()
-            _image.image_transformed.save(buffer, format="png")
-            ProcessedImage.objects.create(
-                identifier=transform_data.identifier,
-                file=ContentFile(
-                    buffer.getvalue(), name=f"{transform_data.identifier}.png"
-                ),
-                transformation=image_transformation,
-            )
-            yield from self._transform(
+            yield from self._internal_transform(
                 _image.image_transformed,
                 transformations=transformations[1:],
-                batch_id=batch_id,
             )
 
-    def transform(
-        self, image: PImage.Image, transformation_batch: TransformationBatch
+    def _transform(
+        self, image: PImage.Image
     ) -> list[InternalImageTransformationResult]:
         all_identifiers = [
             transform_data.identifier for transform_data in self.transformations_data
@@ -91,12 +51,13 @@ class ImageChainTransformer(BaseImageTransformer):
         # applying the black and white filter to a cropped image will consume less resources.
         # however, the order of the transformations is important, since there are
         # some transformations that MUST be applied first.
-        transformed_image = next(
-            self._transform(image, self.transformations_data, transformation_batch.id)
-        )
-
-        return [
+        final_image = next(self._internal_transform(image, self.transformations_data))
+        transformations_applied = [
             InternalImageTransformationResult(
-                identifier=identifier, image=transformed_image
+                identifier=identifier,
+                transformation_name=self.transformations_data[-1].transformation.name,
+                applied_filters=self.transformations_data[-1].filters,
+                image=final_image,
             )
         ]
+        return transformations_applied

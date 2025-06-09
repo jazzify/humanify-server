@@ -12,7 +12,7 @@ from apps.image_processing.models import ProcessingImage
 from apps.image_processing.tests.factories import ProcessingImageFactory
 
 
-class TestManager(BaseImageManager):
+class ImageProcesingTestManager(BaseImageManager):
     def _get_image(self):
         return "test_image"
 
@@ -20,14 +20,15 @@ class TestManager(BaseImageManager):
 @pytest.mark.django_db
 def test_base_image_manager_init():
     processing_image = ProcessingImageFactory()
-    manager = TestManager(image=processing_image, transformer=None)
+    manager = ImageProcesingTestManager(image=processing_image, transformer=None)
     assert manager._opened_image == "test_image"
     assert manager.get_image() == manager._opened_image
 
 
+@pytest.mark.django_db
 def test_base_image_manager_apply_transformations():
     processing_image = ProcessingImageFactory()
-    manager = TestManager(image=processing_image, transformer=None)
+    manager = ImageProcesingTestManager(image=processing_image, transformer=None)
     with pytest.raises(NotImplementedError):
         manager.apply_transformations()
 
