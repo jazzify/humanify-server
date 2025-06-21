@@ -1,6 +1,10 @@
 import pytest
 from PIL import Image as PImage
 
+from apps.image_processing.core.transformations.black_and_white import (
+    ExternalTransformationFiltersBlackAndWhite,
+    TransformationBlackAndWhite,
+)
 from apps.image_processing.core.transformations.blur import (
     ExternalTransformationFiltersBlur,
     TransformationBlur,
@@ -38,5 +42,10 @@ def image_transformations():
             identifier="THUMBNAIL/size_64",
             transformation=TransformationThumbnail,
             filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
+        ),
+        InternalImageTransformationDefinition(
+            identifier="BLACK_AND_WHITE/dither_none",
+            transformation=TransformationBlackAndWhite,
+            filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
         ),
     ]

@@ -14,9 +14,6 @@ from apps.image_processing.core.transformations.thumbnail import (
     ExternalTransformationFiltersThumbnail,
     TransformationThumbnail,
 )
-from apps.image_processing.core.transformers.base import (
-    InternalImageTransformationDefinition,
-)
 from apps.image_processing.core.transformers.chain import (
     ImageChainTransformer,
 )
@@ -26,6 +23,7 @@ from apps.image_processing.core.transformers.multiprocess import (
 from apps.image_processing.core.transformers.sequential import (
     ImageSequentialTransformer,
 )
+from apps.image_processing.models import ImageTransformation, ProcessedImage
 from apps.image_processing.tests.factories import TransformationBatchFactory
 
 
@@ -33,8 +31,7 @@ from apps.image_processing.tests.factories import TransformationBatchFactory
     "apps.image_processing.core.transformers.multiprocess.cfutures.ProcessPoolExecutor"
 )
 @pytest.mark.django_db
-def test_image_multiprocess_transformer(mock_executor):
-    # TODO: TEST DB OBJECTS CREATION
+def test_image_multiprocess_transformer(mock_executor, image_transformations):
     transformation_batch = TransformationBatchFactory()
     mock_image = MagicMock()
     mock_image_copy = MagicMock()
@@ -42,22 +39,15 @@ def test_image_multiprocess_transformer(mock_executor):
     mock_pool_executor_instance = mock_executor.return_value.__enter__.return_value
     mock_future = mock_pool_executor_instance.submit.return_value
 
-    transformations = [
-        InternalImageTransformationDefinition(
-            identifier="THUMBNAIL",
-            transformation=TransformationThumbnail,
-            filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
-        ),
-        InternalImageTransformationDefinition(
-            identifier="BLACK_AND_WHITE",
-            transformation=TransformationBlackAndWhite,
-            filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
-        ),
-    ]
-    transformer = ImageMultiProcessTransformer(transformations=transformations)
+    transformer = ImageMultiProcessTransformer(transformations=image_transformations)
     with patch.object(transformer, "_callback_process") as mock_callback_process:
         transformer.transform(mock_image, transformation_batch=transformation_batch)
         assert_calls = [
+            call(
+                TransformationBlur,
+                mock_image_copy,
+                ExternalTransformationFiltersBlur(radius=80),
+            ),
             call(
                 TransformationThumbnail,
                 mock_image_copy,
@@ -73,9 +63,9 @@ def test_image_multiprocess_transformer(mock_executor):
             assert_calls,
             any_order=True,
         )
-        assert len(assert_calls) == len(transformations)
+        assert len(assert_calls) == len(image_transformations)
 
-        for transformation in transformations:
+        for transformation in image_transformations:
             mock_future.add_done_callback.assert_called_with(
                 mock_callback_process(transformation.identifier)
             )
@@ -83,60 +73,31 @@ def test_image_multiprocess_transformer(mock_executor):
 
 
 @pytest.mark.django_db
-def test_image_sequential_transformer(temp_image_file):
-    # TODO: TEST DB OBJECTS CREATION
+def test_image_sequential_transformer(temp_image_file, image_transformations):
     transformation_batch = TransformationBatchFactory()
-    transformations = [
-        InternalImageTransformationDefinition(
-            identifier="THUMBNAIL",
-            transformation=TransformationThumbnail,
-            filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
-        ),
-        InternalImageTransformationDefinition(
-            identifier="BLACK_AND_WHITE",
-            transformation=TransformationBlackAndWhite,
-            filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
-        ),
-    ]
-    transformer = ImageSequentialTransformer(transformations=transformations)
+    transformer = ImageSequentialTransformer(transformations=image_transformations)
     transformations_applied = transformer.transform(
         temp_image_file, transformation_batch
     )
 
-    assert len(transformations_applied) == len(transformations)
-    assert transformations_applied[0].identifier == "THUMBNAIL"
-    assert transformations_applied[1].identifier == "BLACK_AND_WHITE"
+    assert len(transformations_applied) == len(image_transformations)
+    assert transformations_applied[0].identifier == image_transformations[0].identifier
+    assert transformations_applied[1].identifier == image_transformations[1].identifier
+    assert ImageTransformation.objects.count() == len(image_transformations)
+    assert ProcessedImage.objects.count() == len(image_transformations)
 
 
 @pytest.mark.django_db
-def test_image_chain_transformer(temp_image_file):
-    # TODO: TEST DB OBJECTS CREATION
+def test_image_chain_transformer(temp_image_file, image_transformations):
     transformation_batch = TransformationBatchFactory()
-    transformations = [
-        InternalImageTransformationDefinition(
-            identifier="THUMBNAIL",
-            transformation=TransformationThumbnail,
-            filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
-        ),
-        InternalImageTransformationDefinition(
-            identifier="BLACK_AND_WHITE",
-            transformation=TransformationBlackAndWhite,
-            filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
-        ),
-        InternalImageTransformationDefinition(
-            identifier="BLUR",
-            transformation=TransformationBlur,
-            filters=ExternalTransformationFiltersBlur(),
-        ),
-    ]
-    transformer = ImageChainTransformer(transformations=transformations)
+    transformer = ImageChainTransformer(transformations=image_transformations)
     transformations_applied = transformer.transform(
         temp_image_file, transformation_batch
     )
+    identifiers = transformations_applied[0].identifier.split("-")
+    local_identifiers = [transform.identifier for transform in image_transformations]
 
+    assert identifiers == local_identifiers
     assert len(transformations_applied) == 1
-    assert transformations_applied[0].identifier != (
-        "THUMBNAIL",
-        "BLACK_AND_WHITE",
-        "BLUR",
-    )
+    assert ImageTransformation.objects.count() == 1
+    assert ProcessedImage.objects.count() == 1
