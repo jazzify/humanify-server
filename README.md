@@ -72,13 +72,13 @@ Once this pattern is applied in any app component we highly recommend to switch 
 - **Method Naming**: We use an `object_action[_context]` naming convention for methods (e.g., `place_retrieve_by_user()`, `user_update()`). This helps in keeping the codebase organized and easy to navigate.
 
 ## Current Apps
+- **image_processing**: The `image_processing` app handle general image-related functionalities, such as processing transformations and object detection.
+    - The `image_processing` app its meant to be extracted to a new app in the future as it will grow and become more complex, inner apps should use the `image_processing_api` services that supports built-in types instead of accessing the app `image_processing` functionalities.
+- **places**: The `places` app allows to create and handle `Places`.
+    - A `Place` is a basic virtual representations of a real place with a real-world counterpart.
 - **users**: The `users` app handles user-related functionalities.
 - **api**: The `api` app centralize API routing. This app typically contains api versions that includes URL patterns from other apps, providing a single entry point for all API requests and making versioning or global API changes more manageable.
 - **common**: The `common` app is used to house highly generic and reusable code as public services that are not specific nor related to any single application but are used across the project. This promotes DRY principles and keeps app-specific logic clean.
-- **image_processing**: The `image_processing` app handle general image-related functionalities, such as processing transformations and object detection.
-    - The `image_processing` app its meant to be extracted to a new app in the future as it will grow and become more complex, inner apps should use the `image_processing/api` interfaces that supports built-in types instead of accessing the app `src` functionalities.
-- **places**: The `places` app allows to create and handle `Places`.
-    - A `Place` is a basic virtual representations of a real place with a real-world counterpart.
 
 
 ## Taskfile and Docker
