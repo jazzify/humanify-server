@@ -61,6 +61,10 @@ def external_image_transformations():
             filters=ExternalTransformationFiltersBlur(radius=80),
         ),
         ExternalImageTransformationDefinition(
+            identifier="BLUR/none",
+            transformation=TransformationBlur.name,
+        ),
+        ExternalImageTransformationDefinition(
             identifier="THUMBNAIL/size_64",
             transformation=TransformationThumbnail.name,
             filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
