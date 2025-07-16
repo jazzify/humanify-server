@@ -5,28 +5,28 @@ description = "Humanify"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "django>=5.2.1",
+    "django>=5.2.4",
     "django-cors-headers>=4.7.0",
-    "django-tasks>=0.7.0",
+    "django-tasks>=0.8.1",
     "djangorestframework>=3.16.0",
     "djangorestframework-simplejwt>=5.5.0",
     "drf-spectacular[sidecar]>=0.28.0",
     "gunicorn>=23.0.0",
-    "pillow>=11.2.1",
+    "pillow>=11.3.0",
     "psycopg[binary]>=3.2.9",
-    "ultralytics>=8.3.151",
+    "ultralytics>=8.3.167",
     "whitenoise>=6.9.0",
 ]
 
 [dependency-groups]
 dev = [
-    "faker>=37.3.0",
+    "faker>=37.4.2",
     "factory-boy>=3.3.3",
-    "coverage>=7.8.1",
+    "coverage>=7.9.2",
     "django-debug-toolbar>=5.2.0",
-    "pytest-django>=4.11.0",
-    "django-stubs[compatible-mypy]>=5.2",
-    "djangorestframework-stubs[compatible-mypy]>=3.16.0",
+    "pytest-django>=4.11.1",
+    "django-stubs[compatible-mypy]>=5.2.1",
+    "djangorestframework-stubs[compatible-mypy]>=3.16.1",
     "pre-commit>=4.2.0",
 ]
 
