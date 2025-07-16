@@ -1,6 +1,5 @@
 import logging
 
-from apps.image_processing.core.managers.local import ImageLocalManager
 from apps.image_processing.core.transformers.base import (
     ExternalImageTransformationDefinition,
     InternalImageTransformationResult,
@@ -8,9 +7,12 @@ from apps.image_processing.core.transformers.base import (
 from apps.image_processing.models import (
     ProcessingImage,
 )
+from apps.image_processing.strategies import (
+    get_manager_strategy,
+    get_transformer_strategy,
+)
 from apps.image_processing.utils import (
-    get_local_transformer,
-    get_transformation_dataclasses,
+    get_internal_transformations,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ def image_local_transform(
     image_id: str,
     transformations: list[ExternalImageTransformationDefinition],
     is_chain: bool = False,
-) -> list[InternalImageTransformationResult]:  # TODO: return model structure
+) -> list[InternalImageTransformationResult]:
     """
     Transforms a local image using specified transformations and saves the results.
 
@@ -45,10 +47,17 @@ def image_local_transform(
         results of the transformation, including the paths of the saved images.
     """
     image = ProcessingImage.objects.get(id=image_id, user_id=user_id)
-    transformations_data = get_transformation_dataclasses(transformations)
-    transformer = get_local_transformer(
-        transformations=transformations_data, is_chain=is_chain
+    internal_transformations = get_internal_transformations(
+        external_transformations=transformations
     )
-    image_manager = ImageLocalManager(image=image, transformer=transformer)
+    transformer = get_transformer_strategy(
+        transformations=internal_transformations, is_chain=is_chain
+    )
+    manager = get_manager_strategy()
+
+    image_manager = manager(
+        image=image,
+        transformer=transformer(transformations=internal_transformations),
+    )
     transformations_applied = image_manager.apply_transformations()
     return transformations_applied

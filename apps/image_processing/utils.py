@@ -1,7 +1,6 @@
 from dataclasses import asdict, dataclass
-from typing import Any, Type
+from typing import Type
 
-from apps.image_processing.constants import TRANSFORMATIONS_MULTIPROCESS_TRESHOLD
 from apps.image_processing.core.transformations.base import (
     ExternalTransformationFilters,
     InternalImageTransformation,
@@ -19,16 +18,8 @@ from apps.image_processing.core.transformations.thumbnail import (
     TransformationThumbnail,
 )
 from apps.image_processing.core.transformers.base import (
-    BaseImageTransformer,
     ExternalImageTransformationDefinition,
     InternalImageTransformationDefinition,
-)
-from apps.image_processing.core.transformers.chain import ImageChainTransformer
-from apps.image_processing.core.transformers.multiprocess import (
-    ImageMultiProcessTransformer,
-)
-from apps.image_processing.core.transformers.sequential import (
-    ImageSequentialTransformer,
 )
 from apps.image_processing.models import ImageTransformation
 
@@ -66,17 +57,16 @@ def transformations_mapper(
 
     transformation_map = _mapper[transformation_name]
     return InternalTransformationMapper(
-        # TODO: search for a better way to handle typing here?
-        transformation=transformation_map["transformation"],  # type: ignore[arg-type] # don't know why its complaining
+        transformation=transformation_map["transformation"],  # type: ignore[arg-type]
         filters=transformation_map["filters"](**dict_filters),
     )
 
 
-def get_transformation_dataclasses(
-    transformations: list[ExternalImageTransformationDefinition],
+def get_internal_transformations(
+    external_transformations: list[ExternalImageTransformationDefinition],
 ) -> list[InternalImageTransformationDefinition]:
     dataclasses = []
-    for transform in transformations:
+    for transform in external_transformations:
         mapper = transformations_mapper(
             transformation_name=transform.transformation, filters=transform.filters
         )
@@ -88,16 +78,3 @@ def get_transformation_dataclasses(
             )
         )
     return dataclasses
-
-
-def get_local_transformer(
-    transformations: list[InternalImageTransformationDefinition],
-    is_chain: bool = False,
-) -> BaseImageTransformer:
-    transformer: Type[BaseImageTransformer] = ImageSequentialTransformer
-    if is_chain:
-        transformer = ImageChainTransformer
-    elif len(transformations) >= TRANSFORMATIONS_MULTIPROCESS_TRESHOLD:
-        transformer = ImageMultiProcessTransformer
-
-    return transformer(transformations=transformations)
