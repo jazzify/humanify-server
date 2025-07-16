@@ -34,6 +34,18 @@ def transformations_mapper(
     transformation_name: str,
     filters: ExternalTransformationFilters | None = None,
 ) -> InternalTransformationMapper:
+    """
+    Maps an external transformation definition to an internal transformation.
+
+    Args:
+        transformation_name (str): The name of the transformation.
+        filters (ExternalTransformationFilters | None, optional):
+            The filters to apply to the transformation. Defaults to None.
+
+    Returns:
+        InternalTransformationMapper: The internal transformation with the corresponding filters.
+    """
+
     dict_filters = {}
     if filters:
         dict_filters = asdict(filters)
@@ -65,6 +77,18 @@ def transformations_mapper(
 def get_internal_transformations(
     external_transformations: list[ExternalImageTransformationDefinition],
 ) -> list[InternalImageTransformationDefinition]:
+    """
+    Converts a list of external transformation definitions to a list of internal transformation definitions.
+
+    Args:
+        external_transformations (list[ExternalImageTransformationDefinition]):
+            A list of external transformation definitions.
+
+    Returns:
+        list[InternalImageTransformationDefinition]:
+            A list of internal transformation definitions.
+    """
+
     dataclasses = []
     for transform in external_transformations:
         mapper = transformations_mapper(
