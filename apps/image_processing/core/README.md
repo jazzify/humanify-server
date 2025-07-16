@@ -2,14 +2,14 @@
 
 This app is responsible for handling image processing and transformations.
 
-## Core Concepts
+## Core concepts
 
 - **Image Transformations**: Provides capabilities to transform images in various ways and provide different processing strategies.
 - **Transformation Management**: Provides a high-level interface for general image operations.
 - **Transformers**: Define different strategies for applying transformations, such as in parallel or one by one.
 - **Detectors**: Detect objects in images using computer vision models.
 
-## Key Components
+## Key components
 
 - **`transformations.py`**: Applies a transformation to an image using the Pillow (PIL) library and returns a transformed PIL image copy.
 - **`transformers.py`**: Defines different strategies for applying transformations.
@@ -18,88 +18,87 @@ This app is responsible for handling image processing and transformations.
     - `ImageChainTransformer`: Applies transformations sequentially, where the output of one transformation becomes the input for the next.
 - **`managers.py`**: Manages the overall image processing workflow.
     - `ImageLocalManager`: Manages transformations for images stored locally on the filesystem. It opens the image, applies transformations using a specified transformer, and saves the resulting images to a structured directory.
-- **`data_models.py` (within `src/`)**: Defines internal data structures used during the transformation process, such as `InternalImageTransformationFilters` which are direct mappings to PIL's internal representations.
 
-## How it Works (Example Flow from `apps.places.tasks.py`)
+## How is expected to be used:
 
-The `transform_uploaded_images` task in `apps.places.tasks.py` demonstrates how this `image_processing` app is used:
-
-1. A list of `ImageTransformationDefinition` objects is defined, each specifying an `identifier`, a `transformation` type (e.g., `ImageTransformations.THUMBNAIL`), and optional `filters`.
+1. Define a list of transformation objects is defined, each specifying an `identifier`, a `transformation` name type (e.g., `thumbnail`), and optional `filters`.
 ``` python
-from apps.image_processing.api.constants import (
-        ImageTransformations,
-        TransformationFilterBlurFilter,
-        TransformationFilterDither,
-        TransformationFilterThumbnailResampling,
-    )
-from apps.image_processing.api.data_models import (
-    ImageTransformationDefinition,
-    TransformationFiltersBlackAndWhite,
-    TransformationFiltersBlur,
-    TransformationFiltersThumbnail,
-)
-
-
-transformations = [
-    # Thumbnail
-    ImageTransformationDefinition(
-        identifier="THUMBNAIL/s_320_gap_8_lanczos",
-        transformation=ImageTransformations.THUMBNAIL,
-        filters=TransformationFiltersThumbnail(
-            size=(320, 320),
-            reducing_gap=8,
-            resample=TransformationFilterThumbnailResampling.LANCZOS,
-        ),
-    ),
-    # Black and White
-    ImageTransformationDefinition(
-        identifier="BNW/none",
-        transformation=ImageTransformations.BLACK_AND_WHITE,
-        filters=TransformationFiltersBlackAndWhite(
-            dither=TransformationFilterDither.NONE
-        ),
-    ),
-    # Blur
-    ImageTransformationDefinition(
-        identifier="BLUR/gaussian_86",
-        transformation=ImageTransformations.BLUR,
-        filters=TransformationFiltersBlur(
-            filter=TransformationFilterBlurFilter.GAUSSIAN_BLUR,
-            radius=86,
-        ),
-    )
-]
+    transformations = [
+        {
+            "identifier": "00",
+            "transformation": "black_and_white"
+        },
+        {
+            "identifier": "22",
+            "transformation": "blur",
+            "filters": {
+                "filter": "box_blur",
+                "radius": 10
+            }
+        },
+        {
+            "identifier": "11",
+            "transformation": "thumbnail"
+        }
+    ]
 ```
 
-2. Use the `image_local_transform` service with the `image_path`, the list of `transformations`, and a `parent_folder` name.
+2. Use the `image_processing_transform` function to apply transformations to an image, specifying the `user_id`, `image_path`, `transformations`, `parent_folder` (optional), and `chain` (optional).
 ``` python
-from apps.image_processing.api.services.processing import image_local_transform
-
-applied_transformations = image_local_transform(
-    user_id=request.user.id,
-    image_path="path/to/local/image.png",
+from apps.image_processing.models import (
+    ProcessingImage,
+)
+from apps.image_processing_api.services import image_processing_transform
+...
+image = ProcessingImage.objects.create(...)
+applied_transformations = image_processing_transform(
+    user=request.user.id,
+    image_ids=[image.id],
     transformations=transformations,
-    parent_folder="parent_folder",
-    chain=True, # Defaults to False
+    is_chain=True, # Defaults to False
 )
 
 for transformation in applied_transformations:
-    logger.info(f"{transformation.identifier}: {transformation.path}")
-
+    logger.info(f"{transformation['id']} - {transformation['task_id']} - {transformation['task_status']}")
+...
 ```
 
 ## How It Works Inside:
 
-### Transformations (`image_processing.src.transformations`):
+### Transformations (`image_processing.core.transformations`):
 
 The core logic for applying custom image transformations. This includes the actual transformation logic using the Pillow (PIL) library. They take an image, apply a transformation based on the provided filters, and return a transformed PIL image copy.
 
-Make your own transformation like this:
+Make your own transformation like this and create the corresponding filters interfaces:
 ```python
-from apps.image_processing.src.data_models import InternalImageTransformation
 from PIL import Image as PImage
 
+from .base import (
+    ExternalTransformationFilters,
+    InternalImageTransformation,
+    InternalImageTransformationFilters,
+)
 
+# Define custom filters
+@dataclass
+class InternalTransformationFiltersCrop(InternalImageTransformationFilters):
+    x : ComplexObject()
+    y : ComplexObject2()
+
+
+# Define external representation with native types and `to_internal` method
+@dataclass
+class ExternalTransformationFiltersCrop(InternalTransformationFiltersCrop):
+    x : float
+    y : float
+
+    def to_internal(self) -> InternalTransformationFiltersCrop:
+        return InternalTransformationFiltersCrop(
+            x = ComplexObject(...),
+            y = ComplexObject2(...)
+        )
+
+# Define the transformation
 class TransformationCrop(InternalImageTransformation): # Inherit from InternalImageTransformation
     def _image_transform(
         self,
@@ -120,21 +119,11 @@ class TransformationCrop(InternalImageTransformation): # Inherit from InternalIm
 
 ```
 
-## Filters (`image_processing.src.data_models`):
+### Transformation filters (`image_processing.core.transformations.base`):
 
-Defines the internal representations of image transformations. Each subclass corresponds to a specific transformation type and its associated filters.
+Each transformation has its own set of filters, which are defined in the `ExternalTransformationFilters` interface. These filters are used to specify the parameters for the transformation.
 
-Make your own filters like this:
-```python
-from apps.image_processing.src.data_models import InternalImageTransformationFilters
-
-@dataclass
-class InternalTransformationFiltersCrop(InternalImageTransformationFilters): # Inherit from InternalImageTransformationFilters
-    x_left: float
-    y_top: float
-    x_right: float
-    y_bottom: float
-```
+The `ExternalTransformationFilters` implementations must be able to be converted to the corresponding `InternalImageTransformationFilters` implementations using the `to_internal` method.
 
 ### Transformers (`image_processing.src.transformers`):
 
@@ -143,17 +132,23 @@ Defines different strategies for applying transformations, they take a list of
 
 Make your own transformers like this:
 ```python
-from apps.image_processing.src.data_models import InternalImageTransformationResult
-from apps.image_processing.src.transformers import BaseImageTransformer
-
 from PIL import Image as PImage
 
+from apps.image_processing.core.transformers.base import (
+    InternalImageTransformationResult,
+)
+from apps.image_processing.models import TransformationBatch
 
-# Apply transformations one by one and returna list of
-# the transformed images with their corresponding identifiers
-class ImageSequentialTransformer(BaseImageTransformer):  # Inherit from BaseImageTransformer
-    # Must implement the `transform` method
-    def transform(self, image: PImage.Image) -> list[InternalImageTransformationResult]:
+from .base import BaseImageTransformer
+
+
+class ImageSequentialTransformer(BaseImageTransformer): # Inherit from BaseImageTransformer
+    name = TransformationBatch.SEQUENTIAL # Give it a name
+
+    # Must implement the `_transform` method
+    def _transform(
+        self, image: PImage.Image
+    ) -> list[InternalImageTransformationResult]:
         transformations = []
         for transform_data in self.transformations_data:
             transformation = transform_data.transformation( # InternalImageTransformation instance
@@ -163,7 +158,9 @@ class ImageSequentialTransformer(BaseImageTransformer):  # Inherit from BaseImag
             transformations.append(
                 InternalImageTransformationResult(
                     identifier=transform_data.identifier, # Return the same identifier
-                    image=transformation.image_transformed, # Return the transformed image
+                    transformation_name=transform_data.transformation.name,
+                    applied_filters=transform_data.filters,
+                    image=transformation.image_transformed, # Transformed image
                 )
             )
         return transformations # Must return list[InternalImageTransformationResult]
@@ -187,21 +184,6 @@ from apps.image_processing.src.data_models import InternalTransformationManagerS
 
 
 class ImageS3Manager(BaseImageManager): # Inherit from BaseImageManager
-    @property
-    def _s3_bucket(self):
-        resource_s3 = boto3.resource('s3', region_name='us-outwest-1')
-        the_bucket = resource_s3.Bucket("the_bucket")
-        return the_bucket
-
-    def _load_and_save(self, image: PImage.Image, identifier: str):
-        image_buffer = BytesIO()
-        image.save(image_buffer, format='png')
-        image_buffer.seek(0)
-        image_uploaded = self._s3_bucket.Object.put(
-            body=image_buffer, Key=identifier
-        )
-        return image_uploaded.url
-
     # Must implement the `_get_image` method
     def _get_image(self) -> PImage.Image:
         # Handle your custom manager image loading logic
@@ -211,8 +193,14 @@ class ImageS3Manager(BaseImageManager): # Inherit from BaseImageManager
         file_stream = response['Body']
         return PImage.open(file_stream)
 
-    # Must implement the `save` method to save the transformed images
-    # returned by the self.transformer
+    # Can add extra custom properties
+    @property
+    def _s3_bucket(self):
+        resource_s3 = boto3.resource('s3', region_name='us-outwest-1')
+        the_bucket = resource_s3.Bucket("the_bucket")
+        return the_bucket
+
+    # Can define extra custom methods
     def save(self, parent_folder: str) -> list[InternalTransformationManagerSaveResult]:
         # Handle your custom manager image transformations saving logic
         # and return list[InternalTransformationManagerSaveResult]
@@ -226,32 +214,45 @@ class ImageS3Manager(BaseImageManager): # Inherit from BaseImageManager
                 )
             )
         return saved_images
+
+    # Another custom method
+    def _load_and_save(self, image: PImage.Image, identifier: str):
+        image_buffer = BytesIO()
+        image.save(image_buffer, format='png')
+        image_buffer.seek(0)
+        image_uploaded = self._s3_bucket.Object.put(
+            body=image_buffer, Key=identifier
+        )
+        return image_uploaded.url
 ```
 
 ### Mix all together:
 
 ```python
+from apps.image_processing.core.transformers.base import (
+    InternalImageTransformationDefinition
+)
+
 ...
+image = ProcessingImage.objects.get(id=image_id, user_id=user_id)
 transformations= [
     InternalImageTransformationDefinition(
         identifier="CROP/default",
         transformation=TransformationCrop,
         filters=InternalTransformationFiltersCrop(
-            x_left=80.4,
-            y_top=20,
-            x_right=2,
-            y_bottom=0
+            x=80.4,
+            y=20,
         )
     ),
     ...
 ]
 image_transformer = ImageSequentialTransformer(transformations)
-image_manager = ImageS3Manager(
-    image_path="s3/image/key",
+s3_manager = ImageS3Manager(
+    image=image,
     transformer=image_transformer,
 )
-image_manager.apply_transformations()
-image_manager.save(parent_folder="output")
+s3_manager.apply_transformations()
+s3_manager.save(parent_folder="output")
 ...
 
 ```
