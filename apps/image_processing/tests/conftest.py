@@ -14,6 +14,7 @@ from apps.image_processing.core.transformations.thumbnail import (
     TransformationThumbnail,
 )
 from apps.image_processing.core.transformers.base import (
+    ExternalImageTransformationDefinition,
     InternalImageTransformationDefinition,
 )
 from apps.image_processing.tests.factories import ProcessingImageFactory
@@ -46,6 +47,27 @@ def image_transformations():
         InternalImageTransformationDefinition(
             identifier="BLACK_AND_WHITE/dither_none",
             transformation=TransformationBlackAndWhite,
+            filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
+        ),
+    ]
+
+
+@pytest.fixture
+def external_image_transformations():
+    return [
+        ExternalImageTransformationDefinition(
+            identifier="BLUR/radius_80",
+            transformation=TransformationBlur.name,
+            filters=ExternalTransformationFiltersBlur(radius=80),
+        ),
+        ExternalImageTransformationDefinition(
+            identifier="THUMBNAIL/size_64",
+            transformation=TransformationThumbnail.name,
+            filters=ExternalTransformationFiltersThumbnail(size=(64, 64)),
+        ),
+        ExternalImageTransformationDefinition(
+            identifier="BLACK_AND_WHITE/dither_none",
+            transformation=TransformationBlackAndWhite.name,
             filters=ExternalTransformationFiltersBlackAndWhite(dither=None),
         ),
     ]
