@@ -2,7 +2,7 @@ from typing import Generator, Sequence
 
 from ultralytics import YOLO
 
-from .base import (
+from apps.image_processing.core.detectors.base import (
     DetectorImage,
     DetectorObjectResult,
     DetectorResult,
@@ -10,15 +10,13 @@ from .base import (
 
 
 class CommonObjectDetector:
-    _MODEL = YOLO("yolo11l.pt", task="detect")
-
     def __init__(self, images: Sequence[DetectorImage]) -> None:
+        model = YOLO("yolo11l.pt", task="detect")
         self.images = images
-        _images = [image.image for image in images]
-        self._results = self._MODEL(_images, stream=True)
-        self.results = self._process_results()
+        self._results = model([img.image for img in self.images], stream=True)
 
-    def _process_results(self) -> Generator[DetectorResult]:
+    @property
+    def results(self) -> Generator[DetectorResult]:
         for i, r in enumerate(self._results):
             r_id = self.images[i].identifier
             yield DetectorResult(
