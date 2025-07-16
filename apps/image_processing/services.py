@@ -25,20 +25,14 @@ def image_local_transform(
     is_chain: bool = False,
 ) -> list[InternalImageTransformationResult]:
     """
-    Transforms a local image using specified transformations and saves the results.
-
-    This function processes an image located at the specified path using a list of
-    image transformations. The transformed images are saved under the specified
-    parent folder. The function returns a list of results indicating the paths
-    where the transformed images were saved.
+    Applies a series of transformations to a image and saves the transformed
+    image/s locally.
 
     Args:
         user_id (int): The user_id who is performing the transformation.
-        image_id (str): The identifier of the image to be transformed.
-        transformations (list[ImageTransformationDefinition]): A list of
+        image_id (str): The id of the ProcessingImage to be transformed.
+        transformations (list[ExternalImageTransformationDefinition]): A list of
             transformation definitions to apply to the image.
-        parent_folder (str): The name of the parent folder where transformed
-            images will be saved.
         is_chain (bool, optional): A flag indicating whether to use a chain
             transformer. Defaults to False.
 

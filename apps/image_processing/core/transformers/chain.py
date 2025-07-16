@@ -12,13 +12,18 @@ from .base import BaseImageTransformer
 
 
 class ImageChainTransformer(BaseImageTransformer):
+    """Applies a sequence of image transformations in a chain-like manner."""
+
     name = TransformationBatch.CHAIN
 
     def _internal_transform(
         self,
         image: PImage.Image,
         transformations: list[InternalImageTransformationDefinition],
-    ) -> Generator[PImage.Image]:
+    ) -> Generator[PImage.Image, None, None]:
+        """
+        Recursively applies transformations to the image.
+        """
         if len(transformations) == 1:
             transformation = transformations[0].transformation(
                 image,
@@ -39,18 +44,17 @@ class ImageChainTransformer(BaseImageTransformer):
     def _transform(
         self, image: PImage.Image
     ) -> list[InternalImageTransformationResult]:
+        """
+        Transforms an image using a defined sequence of transformations.
+        """
         all_identifiers = [
             transform_data.identifier for transform_data in self.transformations_data
         ]
         identifier = "-".join(all_identifiers)
 
-        # TODO: We can make this more "efficient" by understanding the
-        # wanted output image final state and appling the transformations
-        # in the correct order, for example, instead of applying (Black and White -> Crop),
-        # we can do (Crop -> Black and White) the output image should be the same but
-        # applying the black and white filter to a cropped image will consume less resources.
-        # however, the order of the transformations is important, since there are
-        # some transformations that MUST be applied first.
+        # Optimize transformation order based on resource consumption while maintaining
+        # the required order of certain transformations.
+        # For example, applying the black and white filter to a cropped image will consume less resources.
         final_image = next(self._internal_transform(image, self.transformations_data))
         transformations_applied = [
             InternalImageTransformationResult(

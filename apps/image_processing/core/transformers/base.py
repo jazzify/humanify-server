@@ -40,22 +40,55 @@ class InternalImageTransformationResult:
 
 
 class BaseImageTransformer(ABC):
+    """
+    Abstract base class for image transformers.
+
+    Attributes:
+        name (str): The name of the transformer.
+    """
+
     name: str
 
     def __init__(
         self,
         transformations: list[InternalImageTransformationDefinition],
     ) -> None:
+        """
+        Initializes the BaseImageTransformer with a list of transformations.
+
+        Args:
+            transformations (list[InternalImageTransformationDefinition]): A list of transformation definitions.
+        """
         self.transformations_data = transformations
 
     @abstractmethod
     def _transform(
         self, image: PImage.Image
-    ) -> list[InternalImageTransformationResult]: ...
+    ) -> list[InternalImageTransformationResult]:
+        """
+        Abstract method to apply transformations to an image.
+
+        Args:
+            image (PImage.Image): The image to transform.
+
+        Returns:
+            list[InternalImageTransformationResult]: A list of transformation results.
+        """
+        ...
 
     def transform(
         self, image: PImage.Image, transformation_batch: TransformationBatch
     ) -> list[InternalImageTransformationResult]:
+        """
+        Transforms an image and saves the results.
+
+        Args:
+            image (PImage.Image): The image to transform.
+            transformation_batch (TransformationBatch): The batch of transformations.
+
+        Returns:
+            list[InternalImageTransformationResult]: A list of applied transformation results.
+        """
         transformations_applied = self._transform(image)
         image_transformations = []
         processed_images = []

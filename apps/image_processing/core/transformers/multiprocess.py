@@ -22,13 +22,23 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
     def __init__(
         self, transformations: list[InternalImageTransformationDefinition]
     ) -> None:
+        """
+        Initializes the ImageMultiProcessTransformer with a list of transformations to be fullfilled in parallel.
+        """
         super().__init__(transformations)
         self._transformations_applied: list[InternalImageTransformationResult] = []
 
     def _callback_process(
         self, identifier: str, filters: ExternalTransformationFilters
     ) -> Callable[[cfutures.Future[InternalImageTransformation]], None]:
+        """
+        Creates a callback function to handle the completion of a transformation.
+        """
+
         def callback(future: cfutures.Future[InternalImageTransformation]) -> None:
+            """
+            Processes the result of a completed transformation and stores it.
+            """
             transformed_image = future.result().image_transformed
             self._transformations_applied.append(
                 InternalImageTransformationResult(
@@ -44,6 +54,9 @@ class ImageMultiProcessTransformer(BaseImageTransformer):
     def _transform(
         self, image: PImage.Image
     ) -> list[InternalImageTransformationResult]:
+        """
+        Applies transformations to an image using a process pool executor.
+        """
         with cfutures.ProcessPoolExecutor() as executor:
             for transform_data in self.transformations_data:
                 image_copy = image.copy()
