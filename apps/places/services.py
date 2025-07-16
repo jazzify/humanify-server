@@ -8,7 +8,6 @@ from apps.places.constants import PLACE_IMAGES_LIMIT
 from apps.places.models import Place, PlaceImage, PlaceTag
 from apps.places.tasks import (
     suggest_tags_from_uploaded_images,
-    transform_uploaded_images,
 )
 from apps.users.models import BaseUser
 
@@ -111,11 +110,6 @@ def place_images_create(
             images_for_detection[place_image.id] = place_image.image.path
             created_place_images.append(place_image)
 
-            transform_uploaded_images.enqueue(
-                user_id=user.id,
-                file_path=place_image.image.path,
-                parent_folder=str(place_image.id),
-            )
         suggest_tags_from_uploaded_images.enqueue(
             user_id=user.id,
             place_id=place_id,

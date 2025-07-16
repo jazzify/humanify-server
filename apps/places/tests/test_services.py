@@ -125,9 +125,8 @@ def test_place_create_with_tags(user):
 
 
 @patch("apps.places.services.suggest_tags_from_uploaded_images")
-@patch("apps.places.services.transform_uploaded_images")
 @pytest.mark.django_db
-def test_place_images_create(mock_transform_uploaded_images, mock_suggest_tags, user):
+def test_place_images_create(mock_suggest_tags, user):
     place = PlaceFactory(user=user)
 
     image1 = SimpleUploadedFile(
@@ -149,11 +148,6 @@ def test_place_images_create(mock_transform_uploaded_images, mock_suggest_tags, 
 
     assert place.images.count() == 1
 
-    mock_transform_uploaded_images.enqueue.assert_called_once_with(
-        user_id=user.id,
-        file_path=f"{settings.MEDIA_ROOT}/place_images/test_image1.jpg",
-        parent_folder=str(1),
-    )
     mock_suggest_tags.enqueue.assert_called_once_with(
         user_id=user.id,
         place_id=place.id,
